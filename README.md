@@ -1,6 +1,7 @@
 # E-commerce Microservices - Demonstração OAuth 2.0
 
 Demonstração prática de autenticação e autorização em microserviços usando OAuth 2.0, JWT tokens e controle de acesso baseado em roles (RBAC).
+ATENÇÃO: Essa aplicação é apenas um teste para fins didáticos. Algumas funcionalidades estão "mockadas" e/ou não foram implementadas.
 
 ## 🏗️ Arquitetura
 
