@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arquitetura do Sistema - E-commerce Microservices</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 10px; }
+        h2 { color: #34495e; margin-top: 30px; }
+        h3 { color: #7f8c8d; }
+        .diagram {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            font-family: monospace;
+            overflow-x: auto;
+        }
+        .service-box {
+            display: inline-block;
+            background: #3498db;
+            color: white;
+            padding: 15px;
+            margin: 5px;
+            border-radius: 8px;
+            text-align: center;
+            min-width: 150px;
+        }
+        .auth-box { background: #e74c3c; }
+        .product-box { background: #27ae60; }
+        .frontend-box { background: #9b59b6; }
+        .db-box { background: #f39c12; }
+        .arrow { color: #2c3e50; font-size: 20px; margin: 0 10px; }
+        .flow-step {
+            background: #ecf0f1;
+            padding: 10px;
+            margin: 5px 0;
+            border-left: 4px solid #3498db;
+            border-radius: 4px;
+        }
+        .security-matrix {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .security-matrix th, .security-matrix td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: center;
+        }
+        .security-matrix th { background: #3498db; color: white; }
+        .allowed { background: #d5f4e6; color: #27ae60; font-weight: bold; }
+        .denied { background: #fadbd8; color: #e74c3c; font-weight: bold; }
+        .code-block {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            margin: 15px 0;
+        }
+        .nav-menu {
+            background: #34495e;
+            padding: 15px;
+            margin: -30px -30px 30px -30px;
+            border-radius: 10px 10px 0 0;
+        }
+        .nav-menu a {
+            color: white;
+            text-decoration: none;
+            margin-right: 20px;
+            padding: 8px 15px;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+        .nav-menu a:hover { background: #2c3e50; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="nav-menu">
+            <a href="/">← Voltar ao Catálogo</a>
+            <a href="/dashboard">Dashboard</a>
+            <% if (user && user.role === 'admin') { %>
+                <a href="/admin/products">Admin</a>
+            <% } %>
+        </div>
+
+        <h1>📐 Documentação de Arquitetura - E-commerce Microservices</h1>
+        
+        <h2>🏗️ Visão Geral do Sistema</h2>
+        <p>Este sistema demonstra uma arquitetura de microserviços com autenticação OAuth 2.0, tokens JWT e controle de acesso baseado em roles (RBAC).</p>
+
+        <div class="diagram">
+            <h3>Arquitetura em Camadas</h3>
+            <div style="text-align: center;">
+                <div style="margin: 20px 0;">
+                    <div class="service-box">Web Browser</div>
+                    <div class="service-box">Mobile App</div>
+                    <div class="service-box">External API</div>
+                </div>
+                <div class="arrow">↓</div>
+                <div style="margin: 20px 0;">
+                    <div class="service-box frontend-box">Frontend Service<br>Port 3000</div>
+                </div>
+                <div class="arrow">↓</div>
+                <div style="margin: 20px 0;">
+                    <div class="service-box auth-box">Auth Service<br>Port 3001</div>
+                    <div class="service-box product-box">Product Service<br>Port 3002</div>
+                </div>
+                <div class="arrow">↓</div>
+                <div style="margin: 20px 0;">
+                    <div class="service-box db-box">auth.db</div>
+                    <div class="service-box db-box">products.db</div>
+                </div>
+            </div>
+        </div>
+
+        <h2>🔐 Fluxo de Autenticação OAuth 2.0</h2>
+        <div class="diagram">
+            <div class="flow-step">1. <strong>Client App</strong> → Authorization Server: Solicitação de autorização</div>
+            <div class="flow-step">2. <strong>Authorization Server</strong> → User: Tela de login</div>
+            <div class="flow-step">3. <strong>User</strong> → Authorization Server: Credenciais</div>
+            <div class="flow-step">4. <strong>Authorization Server</strong> → Client App: Authorization Code</div>
+            <div class="flow-step">5. <strong>Client App</strong> → Authorization Server: Troca code por token</div>
+            <div class="flow-step">6. <strong>Authorization Server</strong> → Client App: Access Token + Refresh Token</div>
+            <div class="flow-step">7. <strong>Client App</strong> → Resource Server: API Request + Token</div>
+            <div class="flow-step">8. <strong>Resource Server</strong> → Client App: Protected Resource</div>
+        </div>
+
+        <h2>🎯 Especificações dos Serviços</h2>
+        
+        <h3>Auth Service (Port 3001)</h3>
+        <p><strong>Responsabilidades:</strong> OAuth 2.0 Authorization Server, JWT Token Management, User Authentication, RBAC Policy Enforcement</p>
+        
+        <div class="code-block">
+<strong>Endpoints Principais:</strong>
+POST /auth/login          - Autenticação de usuário
+POST /auth/validate       - Validação de token JWT
+GET  /auth/profile        - Perfil do usuário
+POST /oauth/token         - OAuth token endpoint
+GET  /oauth/authorize     - OAuth authorization endpoint
+        </div>
+
+        <h3>Product Service (Port 3002)</h3>
+        <p><strong>Responsabilidades:</strong> Product Catalog Management, Order Processing, Shopping Cart Operations, Sales Reporting</p>
+        
+        <div class="code-block">
+<strong>Endpoints Principais:</strong>
+GET    /products          - Listar produtos (público)
+POST   /products          - Criar produto (admin)
+GET    /orders            - Listar pedidos (autenticado)
+POST   /orders/checkout   - Finalizar compra (customer)
+GET    /orders/cart       - Ver carrinho (customer)
+GET    /reports/sales     - Relatórios (viewer/admin)
+        </div>
+
+        <h3>Frontend Service (Port 3000)</h3>
+        <p><strong>Responsabilidades:</strong> User Interface Rendering (EJS Templates), Session Management, API Gateway, Role-based UI Components</p>
+
+        <h2>🛡️ Matriz de Permissões RBAC</h2>
+        <table class="security-matrix">
+            <thead>
+                <tr>
+                    <th>Recurso/Ação</th>
+                    <th>Admin</th>
+                    <th>Viewer</th>
+                    <th>Customer</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Products Read</td>
+                    <td class="allowed">✅</td>
+                    <td class="allowed">✅</td>
+                    <td class="allowed">✅</td>
+                </tr>
+                <tr>
+                    <td>Products Write</td>
+                    <td class="allowed">✅</td>
+                    <td class="denied">❌</td>
+                    <td class="denied">❌</td>
+                </tr>
+                <tr>
+                    <td>Orders Read Own</td>
+                    <td class="allowed">✅</td>
+                    <td class="denied">❌</td>
+                    <td class="allowed">✅</td>
+                </tr>
+                <tr>
+                    <td>Orders Read All</td>
+                    <td class="allowed">✅</td>
+                    <td class="denied">❌</td>
+                    <td class="denied">❌</td>
+                </tr>
+                <tr>
+                    <td>Cart Management</td>
+                    <td class="denied">❌</td>
+                    <td class="denied">❌</td>
+                    <td class="allowed">✅</td>
+                </tr>
+                <tr>
+                    <td>Sales Reports</td>
+                    <td class="allowed">✅</td>
+                    <td class="allowed">✅</td>
+                    <td class="denied">❌</td>
+                </tr>
+                <tr>
+                    <td>User Management</td>
+                    <td class="allowed">✅</td>
+                    <td class="denied">❌</td>
+                    <td class="denied">❌</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>🔄 Fluxo de Comunicação Entre Serviços</h2>
+        <div class="diagram">
+            <h3>Fluxo de Autenticação de Usuário</h3>
+            <div class="flow-step">1. <strong>User</strong> → Frontend Service: Login Request</div>
+            <div class="flow-step">2. <strong>Frontend Service</strong> → Auth Service: Validate Credentials</div>
+            <div class="flow-step">3. <strong>Auth Service</strong> → SQLite (auth.db): Check Database</div>
+            <div class="flow-step">4. <strong>Auth Service</strong> → Frontend Service: Generate JWT</div>
+            <div class="flow-step">5. <strong>Frontend Service</strong> → User: Set Cookie</div>
+        </div>
+
+        <div class="diagram">
+            <h3>Fluxo de Compra de Produto</h3>
+            <div class="flow-step">1. <strong>User</strong> → Frontend Service: Add to Cart</div>
+            <div class="flow-step">2. <strong>Frontend Service</strong> → Product Service: API Call + JWT</div>
+            <div class="flow-step">3. <strong>Product Service</strong> → Auth Service: Validate Token</div>
+            <div class="flow-step">4. <strong>Auth Service</strong> → Product Service: User Info</div>
+            <div class="flow-step">5. <strong>Product Service</strong> → SQLite (products.db): Update Cart</div>
+            <div class="flow-step">6. <strong>Product Service</strong> → Frontend Service: Success Response</div>
+            <div class="flow-step">7. <strong>Frontend Service</strong> → User: Update UI</div>
+        </div>
+
+        <h2>🔧 Estrutura do Token JWT</h2>
+        <div class="code-block">
+{
+  "header": {
+    "alg": "RS256",
+    "typ": "JWT",
+    "kid": "auth-service-key-1"
+  },
+  "payload": {
+    "iss": "ecommerce-auth-service",
+    "aud": "ecommerce-api",
+    "sub": "user-123",
+    "user_id": 1,
+    "email": "admin@ecommerce.com",
+    "role": "admin",
+    "scopes": ["read", "write", "admin"],
+    "iat": 1640995200,
+    "exp": 1640996100,
+    "jti": "token-unique-id"
+  }
+}
+        </div>
+
+        <h2>🗄️ Esquemas de Banco de Dados</h2>
+        
+        <h3>Auth Service Database (auth.db)</h3>
+        <div class="code-block">
+-- Tabela de usuários
+CREATE TABLE users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    role TEXT NOT NULL DEFAULT 'customer',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Clientes OAuth
+CREATE TABLE oauth_clients (
+    client_id TEXT PRIMARY KEY,
+    client_secret TEXT NOT NULL,
+    redirect_uris TEXT NOT NULL,
+    grant_types TEXT NOT NULL,
+    scope TEXT NOT NULL
+);
+
+-- Refresh tokens
+CREATE TABLE refresh_tokens (
+    token TEXT PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    client_id TEXT NOT NULL,
+    expires_at DATETIME NOT NULL,
+    scope TEXT
+);
+        </div>
+
+        <h3>Product Service Database (products.db)</h3>
+        <div class="code-block">
+-- Tabela de produtos
+CREATE TABLE products (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    description TEXT,
+    price DECIMAL(10,2) NOT NULL,
+    category TEXT NOT NULL,
+    stock_quantity INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tabela de pedidos
+CREATE TABLE orders (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    status TEXT DEFAULT 'pending',
+    total_amount DECIMAL(10,2) NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Carrinho de compras
+CREATE TABLE cart_items (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    product_id INTEGER NOT NULL,
+    quantity INTEGER NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+        </div>
+
+        <h2>🛡️ Práticas de Segurança Implementadas</h2>
+        
+        <h3>Segurança de Tokens</h3>
+        <ul>
+            <li><strong>Algoritmo RS256</strong> para assinatura JWT</li>
+            <li><strong>Access tokens</strong> de curta duração (15 minutos)</li>
+            <li><strong>Refresh token rotation</strong> para renovação segura</li>
+            <li><strong>Cookies seguros</strong> com flag HttpOnly</li>
+        </ul>
+
+        <h3>Segurança da API</h3>
+        <ul>
+            <li><strong>Rate limiting</strong> - 100 requests por 15 minutos por IP</li>
+            <li><strong>CORS policy</strong> enforcement</li>
+            <li><strong>Input validation</strong> e sanitização</li>
+            <li><strong>Security headers</strong> via Helmet.js</li>
+        </ul>
+
+        <h3>Segurança do Banco de Dados</h3>
+        <ul>
+            <li><strong>Parameterized queries</strong> (prevenção SQL injection)</li>
+            <li><strong>Password hashing</strong> com bcrypt</li>
+            <li><strong>Princípio do menor privilégio</strong></li>
+        </ul>
+
+        <h2>📊 Monitoramento e Observabilidade</h2>
+        
+        <h3>Health Check Endpoints</h3>
+        <div class="code-block">
+GET /health
+Response: {
+  "status": "healthy",
+  "timestamp": "2024-08-11T00:00:00Z",
+  "version": "1.0.0",
+  "dependencies": {
+    "database": "healthy",
+    "auth_service": "healthy"
+  }
+}
+        </div>
+
+        <h3>Estratégia de Logging</h3>
+        <div class="code-block">
+{
+  "timestamp": "2024-08-11T00:00:00Z",
+  "level": "INFO",
+  "service": "auth-service",
+  "trace_id": "abc123",
+  "user_id": "user-123",
+  "action": "login_attempt",
+  "result": "success",
+  "duration_ms": 150
+}
+        </div>
+
+        <h2>🚀 Melhorias Futuras</h2>
+        
+        <h3>Escalabilidade</h3>
+        <ul>
+            <li><strong>Service mesh</strong> implementation (Istio)</li>
+            <li><strong>Container orchestration</strong> (Kubernetes)</li>
+            <li><strong>Database sharding</strong> strategy</li>
+            <li><strong>Event-driven architecture</strong> com message queues</li>
+        </ul>
+
+        <h3>Segurança Avançada</h3>
+        <ul>
+            <li><strong>OAuth 2.1</strong> compliance</li>
+            <li><strong>PKCE</strong> para todos os flows</li>
+            <li><strong>Certificate-based</strong> client authentication</li>
+            <li><strong>Advanced threat detection</strong></li>
+        </ul>
+
+        <div style="margin-top: 40px; padding: 20px; background: #ecf0f1; border-radius: 8px; text-align: center;">
+            <p><strong>Desenvolvido para MBA em Engenharia de Software</strong><br>
+            <em>Demonstração prática de autenticação e autorização em microserviços</em></p>
+        </div>
+    </div>
+</body>
+</html>

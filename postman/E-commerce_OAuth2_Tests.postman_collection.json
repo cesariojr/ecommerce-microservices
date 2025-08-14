@@ -1,0 +1,977 @@
+{
+  "info": {
+    "name": "E-commerce OAuth 2.0 Tests",
+    "description": "Comprehensive testing suite for OAuth 2.0 authentication and RBAC authorization in microservices",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "auth_service_url",
+      "value": "http://localhost:3001"
+    },
+    {
+      "key": "product_service_url", 
+      "value": "http://localhost:3002"
+    },
+    {
+      "key": "frontend_service_url",
+      "value": "http://localhost:3000"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Health Checks",
+      "item": [
+        {
+          "name": "Auth Service Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{auth_service_url}}/health",
+              "host": ["{{auth_service_url}}"],
+              "path": ["health"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Auth service is healthy', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.status).to.equal('healthy');",
+                  "    pm.expect(response.service).to.equal('auth-service');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Product Service Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{product_service_url}}/health",
+              "host": ["{{product_service_url}}"],
+              "path": ["health"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Product service is healthy', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.status).to.equal('healthy');",
+                  "    pm.expect(response.service).to.equal('product-service');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Authentication Tests",
+      "item": [
+        {
+          "name": "Login Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@ecommerce.com\",\n  \"password\": \"admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{auth_service_url}}/auth/login",
+              "host": ["{{auth_service_url}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Admin login successful', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.access_token).to.not.be.empty;",
+                  "    pm.expect(response.user.role).to.equal('admin');",
+                  "    pm.environment.set('admin_token', response.access_token);",
+                  "    pm.environment.set('admin_user_id', response.user.id);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login Viewer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"viewer@ecommerce.com\",\n  \"password\": \"viewer123\"\n}"
+            },
+            "url": {
+              "raw": "{{auth_service_url}}/auth/login",
+              "host": ["{{auth_service_url}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Viewer login successful', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.access_token).to.not.be.empty;",
+                  "    pm.expect(response.user.role).to.equal('viewer');",
+                  "    pm.environment.set('viewer_token', response.access_token);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login Customer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"customer@ecommerce.com\",\n  \"password\": \"customer123\"\n}"
+            },
+            "url": {
+              "raw": "{{auth_service_url}}/auth/login",
+              "host": ["{{auth_service_url}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Customer login successful', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.access_token).to.not.be.empty;",
+                  "    pm.expect(response.user.role).to.equal('customer');",
+                  "    pm.environment.set('customer_token', response.access_token);",
+                  "    pm.environment.set('customer_user_id', response.user.id);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login Invalid Credentials",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"invalid@email.com\",\n  \"password\": \"wrongpassword\"\n}"
+            },
+            "url": {
+              "raw": "{{auth_service_url}}/auth/login",
+              "host": ["{{auth_service_url}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Invalid login rejected', () => {",
+                  "    pm.response.to.have.status(401);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.error).to.equal('invalid_credentials');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Validate Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{admin_token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{auth_service_url}}/auth/validate",
+              "host": ["{{auth_service_url}}"],
+              "path": ["auth", "validate"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Token validation successful', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.valid).to.be.true;",
+                  "    pm.expect(response.user.role).to.equal('admin');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. OAuth 2.0 Flows",
+      "item": [
+        {
+          "name": "OAuth Authorization Request",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{auth_service_url}}/oauth/authorize?client_id=ecommerce-frontend&redirect_uri=http://localhost:3000/callback&response_type=code&scope=read write&state=xyz123",
+              "host": ["{{auth_service_url}}"],
+              "path": ["oauth", "authorize"],
+              "query": [
+                {
+                  "key": "client_id",
+                  "value": "ecommerce-frontend"
+                },
+                {
+                  "key": "redirect_uri",
+                  "value": "http://localhost:3000/callback"
+                },
+                {
+                  "key": "response_type",
+                  "value": "code"
+                },
+                {
+                  "key": "scope",
+                  "value": "read write"
+                },
+                {
+                  "key": "state",
+                  "value": "xyz123"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('OAuth authorization request accepted', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.client_name).to.equal('E-commerce Frontend');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "OAuth Authorization Confirm",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"client_id\": \"ecommerce-frontend\",\n  \"redirect_uri\": \"http://localhost:3000/callback\",\n  \"scope\": \"read write\",\n  \"state\": \"xyz123\",\n  \"user_id\": {{admin_user_id}}\n}"
+            },
+            "url": {
+              "raw": "{{auth_service_url}}/oauth/authorize/confirm",
+              "host": ["{{auth_service_url}}"],
+              "path": ["oauth", "authorize", "confirm"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Authorization code generated', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.code).to.not.be.empty;",
+                  "    pm.environment.set('auth_code', response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "OAuth Token Exchange",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "grant_type",
+                  "value": "authorization_code"
+                },
+                {
+                  "key": "code",
+                  "value": "{{auth_code}}"
+                },
+                {
+                  "key": "redirect_uri",
+                  "value": "http://localhost:3000/callback"
+                },
+                {
+                  "key": "client_id",
+                  "value": "ecommerce-frontend"
+                },
+                {
+                  "key": "client_secret",
+                  "value": "frontend-secret-key"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{auth_service_url}}/oauth/token",
+              "host": ["{{auth_service_url}}"],
+              "path": ["oauth", "token"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('OAuth token exchange successful', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.access_token).to.not.be.empty;",
+                  "    pm.expect(response.refresh_token).to.not.be.empty;",
+                  "    pm.environment.set('oauth_access_token', response.access_token);",
+                  "    pm.environment.set('oauth_refresh_token', response.refresh_token);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Client Credentials Grant",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "grant_type",
+                  "value": "client_credentials"
+                },
+                {
+                  "key": "client_id",
+                  "value": "ecommerce-frontend"
+                },
+                {
+                  "key": "client_secret",
+                  "value": "frontend-secret-key"
+                },
+                {
+                  "key": "scope",
+                  "value": "read"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{auth_service_url}}/oauth/token",
+              "host": ["{{auth_service_url}}"],
+              "path": ["oauth", "token"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Client credentials grant successful', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.access_token).to.not.be.empty;",
+                  "    pm.expect(response.expires_in).to.equal(3600);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4. RBAC Authorization Tests",
+      "item": [
+        {
+          "name": "Admin Tests",
+          "item": [
+            {
+              "name": "Admin - List Products",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{product_service_url}}/products",
+                  "host": ["{{product_service_url}}"],
+                  "path": ["products"]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Admin can list products', () => {",
+                      "    pm.response.to.have.status(200);",
+                      "    const response = pm.response.json();",
+                      "    pm.expect(response.products).to.be.an('array');",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Admin - Create Product",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Test Product Admin\",\n  \"description\": \"Product created by admin for testing\",\n  \"price\": 99.99,\n  \"category\": \"Test\",\n  \"stock_quantity\": 10,\n  \"image_url\": \"https://via.placeholder.com/300x300?text=Test\"\n}"
+                },
+                "url": {
+                  "raw": "{{product_service_url}}/products",
+                  "host": ["{{product_service_url}}"],
+                  "path": ["products"]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Admin can create product', () => {",
+                      "    pm.response.to.have.status(201);",
+                      "    const response = pm.response.json();",
+                      "    pm.expect(response.message).to.include('created successfully');",
+                      "    pm.environment.set('test_product_id', response.product_id);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Admin - View All Orders",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{product_service_url}}/orders",
+                  "host": ["{{product_service_url}}"],
+                  "path": ["orders"]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Admin can view all orders', () => {",
+                      "    pm.response.to.have.status(200);",
+                      "    const response = pm.response.json();",
+                      "    pm.expect(response.orders).to.be.an('array');",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Admin - View Sales Reports",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{product_service_url}}/reports/sales",
+                  "host": ["{{product_service_url}}"],
+                  "path": ["reports", "sales"]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Admin can view sales reports', () => {",
+                      "    pm.response.to.have.status(200);",
+                      "    const response = pm.response.json();",
+                      "    pm.expect(response.total_sales).to.be.a('number');",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Viewer Tests",
+          "item": [
+            {
+              "name": "Viewer - List Products",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{viewer_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{product_service_url}}/products",
+                  "host": ["{{product_service_url}}"],
+                  "path": ["products"]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Viewer can list products', () => {",
+                      "    pm.response.to.have.status(200);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Viewer - Try Create Product (Should Fail)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{viewer_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Unauthorized Product\",\n  \"price\": 99.99,\n  \"category\": \"Test\"\n}"
+                },
+                "url": {
+                  "raw": "{{product_service_url}}/products",
+                  "host": ["{{product_service_url}}"],
+                  "path": ["products"]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Viewer cannot create product', () => {",
+                      "    pm.response.to.have.status(403);",
+                      "    const response = pm.response.json();",
+                      "    pm.expect(response.error).to.equal('access_denied');",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Viewer - View Sales Reports",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{viewer_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{product_service_url}}/reports/sales",
+                  "host": ["{{product_service_url}}"],
+                  "path": ["reports", "sales"]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Viewer can view sales reports', () => {",
+                      "    pm.response.to.have.status(200);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Customer Tests",
+          "item": [
+            {
+              "name": "Customer - List Products",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customer_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{product_service_url}}/products",
+                  "host": ["{{product_service_url}}"],
+                  "path": ["products"]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Customer can list products', () => {",
+                      "    pm.response.to.have.status(200);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Customer - View Cart",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customer_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{product_service_url}}/orders/cart",
+                  "host": ["{{product_service_url}}"],
+                  "path": ["orders", "cart"]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Customer can view cart', () => {",
+                      "    pm.response.to.have.status(200);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Customer - Add to Cart",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customer_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"product_id\": 1,\n  \"quantity\": 2\n}"
+                },
+                "url": {
+                  "raw": "{{product_service_url}}/orders/cart/add",
+                  "host": ["{{product_service_url}}"],
+                  "path": ["orders", "cart", "add"]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Customer can add to cart', () => {",
+                      "    pm.response.to.have.status(201);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Customer - Try Create Product (Should Fail)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customer_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Unauthorized Product\",\n  \"price\": 99.99\n}"
+                },
+                "url": {
+                  "raw": "{{product_service_url}}/products",
+                  "host": ["{{product_service_url}}"],
+                  "path": ["products"]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Customer cannot create product', () => {",
+                      "    pm.response.to.have.status(403);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Customer - Try View Reports (Should Fail)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customer_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{product_service_url}}/reports/sales",
+                  "host": ["{{product_service_url}}"],
+                  "path": ["reports", "sales"]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Customer cannot view reports', () => {",
+                      "    pm.response.to.have.status(403);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "5. Security Tests",
+      "item": [
+        {
+          "name": "Invalid Token Test",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer invalid.jwt.token"
+              }
+            ],
+            "url": {
+              "raw": "{{product_service_url}}/products",
+              "host": ["{{product_service_url}}"],
+              "path": ["products"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Invalid token rejected', () => {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "No Token Test",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Unauthorized Product\",\n  \"price\": 99.99\n}"
+            },
+            "url": {
+              "raw": "{{product_service_url}}/products",
+              "host": ["{{product_service_url}}"],
+              "path": ["products"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('No token rejected', () => {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "exec": [
+          "// Set timestamp for requests",
+          "pm.globals.set('timestamp', new Date().toISOString());"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "exec": [
+          "// Common test assertions",
+          "pm.test('Response time is acceptable', () => {",
+          "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+          "});",
+          "",
+          "// Log errors for debugging",
+          "if (pm.response.code >= 400) {",
+          "    console.log('Error Response:', pm.response.text());",
+          "}"
+        ]
+      }
+    }
+  ]
+}

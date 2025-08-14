@@ -1,0 +1,20 @@
+{
+  "name": "ecommerce-microservices",
+  "version": "1.0.0",
+  "description": "OAuth 2.0 Microservices Demo for Authentication Course",
+  "main": "index.js",
+  "scripts": {
+    "start": "node scripts/start-all.js",
+    "start:auth": "cd auth-service && npm start",
+    "start:products": "cd product-service && npm start",
+    "start:frontend": "cd frontend-service && npm start",
+    "install:all": "npm install && cd auth-service && npm install && cd ../product-service && npm install && cd ../frontend-service && npm install",
+    "setup": "node scripts/setup-databases.js"
+  },
+  "keywords": ["oauth2", "microservices", "authentication", "authorization", "jwt"],
+  "author": "MBA Course Demo",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  }
+}

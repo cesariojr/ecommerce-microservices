@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-store me-2"></i>E-commerce Demo
+            </a>
+            
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/">
+                    <i class="fas fa-home me-1"></i>Catálogo
+                </a>
+                <a class="nav-link" href="/architecture">
+                    <i class="fas fa-sitemap me-1"></i>Arquitetura
+                </a>
+                <a class="nav-link active" href="/dashboard">
+                    <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                </a>
+                <% if (user.role === 'admin') { %>
+                    <a class="nav-link" href="/admin/products">
+                        <i class="fas fa-cogs me-1"></i>Products
+                    </a>
+                <% } %>
+                <% if (user.role === 'customer') { %>
+                    <a class="nav-link" href="/cart">
+                        <i class="fas fa-shopping-cart me-1"></i>Cart
+                    </a>
+                <% } %>
+                <a class="nav-link" href="/">
+                    <i class="fas fa-home me-1"></i>Store
+                </a>
+                <form class="d-inline" action="/logout" method="POST">
+                    <button class="btn btn-outline-light btn-sm" type="submit">
+                        <i class="fas fa-sign-out-alt me-1"></i>Logout
+                    </button>
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    <!-- User Info Header -->
+    <div class="bg-light py-3">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col">
+                    <h4 class="mb-0">
+                        <% if (user.role === 'admin') { %>
+                            <i class="fas fa-user-shield text-danger me-2"></i>
+                        <% } else if (user.role === 'viewer') { %>
+                            <i class="fas fa-chart-bar text-warning me-2"></i>
+                        <% } else { %>
+                            <i class="fas fa-user text-success me-2"></i>
+                        <% } %>
+                        Welcome, <%= user.name %>
+                    </h4>
+                    <p class="text-muted mb-0">
+                        Role: <span class="badge bg-<%= user.role === 'admin' ? 'danger' : user.role === 'viewer' ? 'warning' : 'success' %>">
+                            <%= user.role.toUpperCase() %>
+                        </span>
+                        | Scopes: <%= user.scopes.join(', ') %>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container my-4">
+        <!-- Admin Dashboard -->
+        <% if (user.role === 'admin') { %>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-box me-2"></i>Recent Products
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <% if (data.products && data.products.length > 0) { %>
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Name</th>
+                                                <th>Price</th>
+                                                <th>Stock</th>
+                                                <th>Category</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <% data.products.forEach(product => { %>
+                                                <tr>
+                                                    <td><%= product.name %></td>
+                                                    <td>$<%= product.price %></td>
+                                                    <td><%= product.stock_quantity %></td>
+                                                    <td><%= product.category %></td>
+                                                </tr>
+                                            <% }); %>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <a href="/admin/products" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-cogs me-1"></i>Manage Products
+                                </a>
+                            <% } else { %>
+                                <p class="text-muted">No products found.</p>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-shopping-bag me-2"></i>Recent Orders
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <% if (data.orders && data.orders.length > 0) { %>
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Customer</th>
+                                                <th>Total</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <% data.orders.forEach(order => { %>
+                                                <tr>
+                                                    <td>#<%= order.id %></td>
+                                                    <td><%= order.user_email %></td>
+                                                    <td>$<%= order.total_amount %></td>
+                                                    <td>
+                                                        <span class="badge bg-<%= order.status === 'completed' ? 'success' : 'warning' %>">
+                                                            <%= order.status %>
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            <% }); %>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            <% } else { %>
+                                <p class="text-muted">No orders found.</p>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        <!-- Viewer Dashboard -->
+        <% } else if (user.role === 'viewer') { %>
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-chart-line me-2"></i>Sales Reports
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <% if (data.reports) { %>
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="card bg-primary text-white">
+                                            <div class="card-body text-center">
+                                                <h3>$<%= data.reports.total_sales.toLocaleString() %></h3>
+                                                <p class="mb-0">Total Sales</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="card bg-success text-white">
+                                            <div class="card-body text-center">
+                                                <h3><%= data.reports.total_orders %></h3>
+                                                <p class="mb-0">Total Orders</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="card bg-info text-white">
+                                            <div class="card-body text-center">
+                                                <h3>$<%= data.reports.avg_order_value.toFixed(2) %></h3>
+                                                <p class="mb-0">Avg Order Value</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="card bg-warning text-white">
+                                            <div class="card-body text-center">
+                                                <h3><%= data.reports.top_products.length %></h3>
+                                                <p class="mb-0">Top Products</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-4">
+                                    <h6>Top Selling Products</h6>
+                                    <div class="table-responsive">
+                                        <table class="table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Product</th>
+                                                    <th>Sales</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <% data.reports.top_products.forEach(product => { %>
+                                                    <tr>
+                                                        <td><%= product.name %></td>
+                                                        <td>$<%= product.sales.toLocaleString() %></td>
+                                                    </tr>
+                                                <% }); %>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                
+                                <p class="text-muted mt-3">
+                                    <i class="fas fa-calendar me-1"></i>
+                                    Report Period: <%= data.reports.period %>
+                                </p>
+                            <% } else { %>
+                                <p class="text-muted">Unable to load reports.</p>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        <!-- Customer Dashboard -->
+        <% } else { %>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-shopping-cart me-2"></i>Shopping Cart
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <% if (data.cart && data.cart.cart_items.length > 0) { %>
+                                <p>
+                                    <strong><%= data.cart.item_count %></strong> items in cart
+                                    <br>
+                                    Total: <strong>$<%= data.cart.total_amount.toFixed(2) %></strong>
+                                </p>
+                                <a href="/cart" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-shopping-cart me-1"></i>View Cart
+                                </a>
+                            <% } else { %>
+                                <p class="text-muted">Your cart is empty.</p>
+                                <a href="/" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-shopping-bag me-1"></i>Start Shopping
+                                </a>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-history me-2"></i>Order History
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <% if (data.orders && data.orders.length > 0) { %>
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Order #</th>
+                                                <th>Total</th>
+                                                <th>Status</th>
+                                                <th>Date</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <% data.orders.slice(0, 5).forEach(order => { %>
+                                                <tr>
+                                                    <td>#<%= order.id %></td>
+                                                    <td>$<%= order.total_amount %></td>
+                                                    <td>
+                                                        <span class="badge bg-<%= order.status === 'completed' ? 'success' : 'warning' %>">
+                                                            <%= order.status %>
+                                                        </span>
+                                                    </td>
+                                                    <td><%= new Date(order.created_at).toLocaleDateString() %></td>
+                                                </tr>
+                                            <% }); %>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            <% } else { %>
+                                <p class="text-muted">No orders yet.</p>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <% } %>
+
+        <!-- OAuth Info -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <h6 class="card-title">
+                            <i class="fas fa-info-circle me-2"></i>OAuth 2.0 Authentication Info
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <strong>User ID:</strong> <%= user.user_id %><br>
+                                <strong>Email:</strong> <%= user.email %><br>
+                                <strong>Role:</strong> <%= user.role %>
+                            </div>
+                            <div class="col-md-4">
+                                <strong>Scopes:</strong><br>
+                                <% user.scopes.forEach(scope => { %>
+                                    <span class="badge bg-secondary me-1"><%= scope %></span>
+                                <% }); %>
+                            </div>
+                            <div class="col-md-4">
+                                <strong>Token Type:</strong> JWT Bearer<br>
+                                <strong>Auth Method:</strong> OAuth 2.0<br>
+                                <strong>Session:</strong> Cookie-based
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
