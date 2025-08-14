@@ -1,238 +1,196 @@
-# Cenários de Teste Rápidos - Postman
+# 🧪 Testes de API - Guia Simplificado
 
-## 🚀 Setup Rápido (5 minutos)
+## 🚀 Setup Rápido (2 minutos)
 
 ### 1. Importar no Postman
-1. Abrir Postman
-2. Import → File → Selecionar `E-commerce_OAuth2_Tests.postman_collection.json`
-3. Import → File → Selecionar `E-commerce_Environment.postman_environment.json`
-4. Selecionar environment "E-commerce OAuth 2.0 Environment"
+1. **Import** → **File** → Selecionar `E-commerce_OAuth2_Tests.postman_collection.json`
+2. **Import** → **File** → Selecionar `E-commerce_Environment.postman_environment.json`
+3. Selecionar environment **"E-commerce OAuth 2.0 Environment"**
 
-### 2. Verificar Serviços
-Execute primeiro os requests de "Health Checks" para confirmar que todos os serviços estão rodando.
-
----
-
-## 🎯 Cenários de Teste por Conceito
-
-### Cenário 1: Autenticação Básica (JWT)
-**Objetivo**: Demonstrar login tradicional e validação de JWT
-
-**Sequência**:
-1. `Login Admin` → Salva token automaticamente
-2. `Validate Token` → Confirma token válido
-3. `Login Invalid Credentials` → Demonstra falha de autenticação
-
-**Conceitos Demonstrados**:
-- ✅ Autenticação com credenciais
-- ✅ Geração de JWT tokens
-- ✅ Validação de tokens
-- ✅ Tratamento de credenciais inválidas
-
----
-
-### Cenário 2: OAuth 2.0 Authorization Code Flow
-**Objetivo**: Demonstrar fluxo OAuth completo
-
-**Sequência**:
-1. `OAuth Authorization Request` → Solicita autorização
-2. `OAuth Authorization Confirm` → Simula aprovação do usuário
-3. `OAuth Token Exchange` → Troca código por token
-
-**Conceitos Demonstrados**:
-- ✅ OAuth 2.0 Authorization Code Grant
-- ✅ Separação entre autorização e token
-- ✅ Redirect URIs e state parameter
-- ✅ Client authentication
-
----
-
-### Cenário 3: RBAC - Admin (Acesso Total)
-**Objetivo**: Demonstrar permissões completas do administrador
-
-**Pré-requisito**: Execute `Login Admin` primeiro
-
-**Sequência**:
-1. `Admin - List Products` → Visualizar produtos
-2. `Admin - Create Product` → Criar novo produto
-3. `Admin - View All Orders` → Ver todos os pedidos
-4. `Admin - View Sales Reports` → Acessar relatórios
-
-**Conceitos Demonstrados**:
-- ✅ Role-based access control
-- ✅ Permissões de CRUD completo
-- ✅ Acesso a dados administrativos
-- ✅ Scopes de autorização
-
----
-
-### Cenário 4: RBAC - Viewer (Somente Leitura + Relatórios)
-**Objetivo**: Demonstrar permissões limitadas do viewer
-
-**Pré-requisito**: Execute `Login Viewer` primeiro
-
-**Sequência**:
-1. `Viewer - List Products` → ✅ Pode visualizar
-2. `Viewer - Try Create Product` → ❌ Deve falhar (403)
-3. `Viewer - View Sales Reports` → ✅ Pode acessar relatórios
-
-**Conceitos Demonstrados**:
-- ✅ Permissões de leitura
-- ✅ Bloqueio de operações de escrita
-- ✅ Acesso específico a relatórios
-- ✅ Controle granular de acesso
-
----
-
-### Cenário 5: RBAC - Customer (Compras)
-**Objetivo**: Demonstrar permissões de compra do cliente
-
-**Pré-requisito**: Execute `Login Customer` primeiro
-
-**Sequência**:
-1. `Customer - List Products` → ✅ Pode visualizar catálogo
-2. `Customer - View Cart` → ✅ Pode ver carrinho
-3. `Customer - Add to Cart` → ✅ Pode adicionar produtos
-4. `Customer - Try Create Product` → ❌ Deve falhar (403)
-5. `Customer - Try View Reports` → ❌ Deve falhar (403)
-
-**Conceitos Demonstrados**:
-- ✅ Permissões específicas de cliente
-- ✅ Acesso ao carrinho de compras
-- ✅ Bloqueio de funções administrativas
-- ✅ Isolamento de recursos por usuário
-
----
-
-### Cenário 6: Testes de Segurança
-**Objetivo**: Demonstrar proteções de segurança
-
-**Sequência**:
-1. `Invalid Token Test` → Token inválido rejeitado
-2. `No Token Test` → Requisição sem token rejeitada
-
-**Conceitos Demonstrados**:
-- ✅ Validação de tokens JWT
-- ✅ Proteção contra acesso não autorizado
-- ✅ Tratamento de erros de segurança
-
----
-
-## 🔄 Fluxos Completos de Teste
-
-### Fluxo A: Demonstração Completa OAuth 2.0
-```
-1. Health Checks (todos os serviços)
-2. OAuth Authorization Request
-3. OAuth Authorization Confirm  
-4. OAuth Token Exchange
-5. Client Credentials Grant
-6. Token validation
-```
-
-### Fluxo B: Demonstração RBAC Completa
-```
-1. Login Admin → Test admin permissions
-2. Login Viewer → Test viewer permissions  
-3. Login Customer → Test customer permissions
-4. Security tests (invalid tokens)
-```
-
-### Fluxo C: Jornada do Cliente (E-commerce)
-```
-1. Login Customer
-2. List Products (browse catalog)
-3. Add to Cart
-4. View Cart
-5. Try unauthorized actions (should fail)
+### 2. Verificar Serviços Rodando
+```bash
+# Verificar se todos os serviços estão ativos:
+curl http://localhost:3001/health  # Auth Service
+curl http://localhost:3002/health  # Product Service  
+curl http://localhost:3000         # Frontend Service
 ```
 
 ---
 
-## 📊 Interpretando os Resultados
+## 🎯 Cenários de Teste Essenciais
 
-### ✅ Sucessos Esperados
-- **200 OK**: Operações autorizadas
-- **201 Created**: Recursos criados com sucesso
-- **302 Found**: Redirects OAuth
+### 📋 Cenário 1: Teste Básico de Autenticação (8 min)
+**Objetivo**: Verificar login e JWT funcionando para todos os perfis
 
-### ❌ Falhas Esperadas (Demonstram Segurança)
-- **401 Unauthorized**: Token inválido/ausente
-- **403 Forbidden**: Permissões insuficientes
-- **429 Too Many Requests**: Rate limiting
+**Passos**:
+1. `🔐 Login Admin` → Gera token JWT automaticamente
+2. `🔐 Login Viewer` → Gera token JWT automaticamente  
+3. `🔐 Login Customer` → Gera token JWT automaticamente
+4. `✅ Validate Admin Token` → Confirma token e role admin
+5. `✅ Validate Viewer Token` → Confirma token e role viewer
+6. `✅ Validate Customer Token` → Confirma token e role customer
 
-### 🔍 Validações Automáticas
-Cada request inclui testes automáticos que verificam:
-- Status codes corretos
-- Estrutura de resposta
-- Presença de tokens
-- Roles e scopes corretos
-- Mensagens de erro apropriadas
+**Resultado Esperado**:
+- ✅ Todos os logins: 200 OK + token salvo
+- ✅ Todas as validações: 200 OK + role correto verificado
+- ❌ Login inválido: 401 Unauthorized
 
 ---
 
-## 🎓 Conceitos Didáticos por Teste
+### 📋 Cenário 1.5: Acesso Público (2 min)
+**Objetivo**: Verificar que recursos públicos funcionam sem autenticação
 
-| Teste | Conceito OAuth 2.0 | Conceito RBAC | Conceito Segurança |
-|-------|-------------------|---------------|-------------------|
-| Login Admin | JWT Generation | Admin Role | Credential Validation |
-| OAuth Flow | Authorization Code Grant | - | Client Authentication |
-| Admin Create Product | Bearer Token | Write Permission | Scope Validation |
-| Viewer Try Create | - | Role Restriction | Access Denied |
-| Customer Cart | - | Resource Ownership | User Isolation |
-| Invalid Token | Token Validation | - | Security Enforcement |
+**Passos**:
+1. `🌐 Public - List Products (No Auth)` → Acesso sem token
+
+**Resultado Esperado**:
+- ✅ Listagem pública: 200 OK + produtos retornados
 
 ---
 
-## 🚀 Executar Todos os Testes
+### 📋 Cenário 2: Controle de Acesso por Roles (10 min)
+**Objetivo**: Demonstrar RBAC funcionando
 
-### Via Postman GUI
-1. Selecionar collection "E-commerce OAuth 2.0 Tests"
-2. Clicar "Run" 
-3. Selecionar todos os folders
-4. Clicar "Run E-commerce OAuth 2.0 Tests"
+#### 2A. Admin (Acesso Total)
+1. `🔐 Login Admin`
+2. `📦 Admin - List Products` → ✅ 200 OK
+3. `➕ Admin - Create Product` → ✅ 201 Created
+4. `📊 Admin - View Reports` → ✅ 200 OK
+
+#### 2B. Viewer (Somente Leitura + Relatórios)
+1. `🔐 Login Viewer`
+2. `📦 Viewer - List Products` → ✅ 200 OK
+3. `❌ Viewer - Try Create Product` → ❌ 403 Forbidden
+4. `📊 Viewer - View Reports` → ✅ 200 OK
+
+#### 2C. Customer (Compras)
+1. `🔐 Login Customer`
+2. `📦 Customer - List Products` → ✅ 200 OK
+3. `🛒 Customer - View Cart` → ✅ 200 OK
+4. `➕ Customer - Add to Cart` → ✅ 201 Created
+5. `❌ Customer - Try Create Product` → ❌ 403 Forbidden
+6. `❌ Customer - Try View Reports` → ❌ 403 Forbidden
+
+---
+
+### 📋 Cenário 3: Testes de Segurança (3 min)
+**Objetivo**: Verificar proteções de segurança
+
+**Passos**:
+1. `❌ No Token Test` → Requisição sem token
+2. `❌ Invalid Token Test` → Token inválido/expirado
+
+**Resultado Esperado**:
+- ❌ Ambos: 401 Unauthorized
+
+---
+
+## 🔄 Execução Automatizada
+
+### Via Postman (Recomendado)
+1. Clicar na collection **"E-commerce OAuth 2.0 Tests"**
+2. Clicar **"Run collection"**
+3. Selecionar **todos os folders**
+4. Clicar **"Run E-commerce OAuth 2.0 Tests"**
 
 ### Via Newman CLI
 ```bash
 cd postman/
+chmod +x run-tests.sh
 ./run-tests.sh
 ```
 
-### Resultado Esperado
-- ✅ ~25 testes executados
-- ✅ ~20 sucessos (operações autorizadas)
-- ✅ ~5 falhas esperadas (demonstram segurança)
-- 📊 Relatório HTML gerado
+---
+
+## 📊 Interpretando Resultados
+
+### ✅ Sucessos Esperados
+| Status | Significado | Exemplo |
+|--------|-------------|---------|
+| **200 OK** | Operação autorizada | Login, listar produtos |
+| **201 Created** | Recurso criado | Criar produto (admin) |
+| **204 No Content** | Operação sem retorno | Adicionar ao carrinho |
+
+### ❌ Falhas Esperadas (Demonstram Segurança)
+| Status | Significado | Exemplo |
+|--------|-------------|---------|
+| **401 Unauthorized** | Token ausente/inválido | Sem autenticação |
+| **403 Forbidden** | Sem permissão | Viewer tentando criar produto |
+| **404 Not Found** | Recurso não existe | Produto inexistente |
 
 ---
 
-## 🎯 Pontos de Aprendizado
+## 🎓 Conceitos Demonstrados
 
-Após executar os testes, os alunos terão visto na prática:
+### 🔐 Autenticação JWT
+- **Login** → Gera token JWT com claims do usuário
+- **Validação** → Verifica assinatura e expiração
+- **Headers** → `Authorization: Bearer <token>`
 
-1. **OAuth 2.0 Authorization Framework**
-   - Authorization Code Grant
-   - Client Credentials Grant
-   - Token validation e introspection
+### 🛡️ RBAC (Role-Based Access Control)
+- **Admin**: Acesso total (CRUD + relatórios)
+- **Viewer**: Leitura + relatórios (sem escrita)
+- **Customer**: Compras + carrinho (sem admin)
 
-2. **JWT (JSON Web Tokens)**
-   - Estrutura e claims
-   - Assinatura e validação
-   - Lifecycle management
+### 🔒 Segurança de APIs
+- **Token obrigatório** para endpoints protegidos
+- **Validação de roles** antes de executar ações
+- **Mensagens de erro** padronizadas
 
-3. **RBAC (Role-Based Access Control)**
-   - Diferentes níveis de acesso
-   - Controle granular de permissões
-   - Isolamento de recursos
+---
 
-4. **Microservices Security**
-   - Service-to-service authentication
-   - Distributed authorization
-   - Token-based communication
+## 🚨 Troubleshooting
 
-5. **API Security Best Practices**
-   - Token validation
-   - Error handling
-   - Rate limiting
-   - Input validation
+### Problema: "Connection refused"
+**Solução**: Verificar se os serviços estão rodando
+```bash
+npm start
+```
 
+### Problema: "401 Unauthorized" inesperado
+**Solução**: 
+1. Executar `Login Admin/Viewer/Customer` primeiro
+2. Verificar se token foi salvo automaticamente
+3. Verificar se environment está selecionado
+
+### Problema: "403 Forbidden" inesperado
+**Solução**: Verificar se está usando o usuário correto:
+- **Admin**: `admin@ecommerce.com`
+- **Viewer**: `viewer@ecommerce.com`  
+- **Customer**: `customer@ecommerce.com`
+
+---
+
+## 📈 Métricas de Sucesso
+
+### Execução Completa Esperada:
+- **Total**: ~23 testes
+- **✅ Sucessos**: ~16 (70%)
+- **❌ Falhas esperadas**: ~7 (30% - demonstram segurança)
+- **⏱️ Tempo**: 2-3 minutos
+
+### Principais Validações:
+- ✅ Todos os serviços respondem (health checks)
+- ✅ Login gera tokens válidos para cada perfil
+- ✅ Validação confirma role correto para cada token
+- ✅ Admin tem acesso total
+- ✅ Viewer tem acesso limitado
+- ✅ Customer tem acesso de compra
+- ❌ Operações não autorizadas são bloqueadas
+
+---
+
+## 🎯 Resumo dos Endpoints Testados
+
+| Endpoint | Método | Acesso | Descrição |
+|----------|--------|--------|-----------|
+| `/health` | GET | Público | Health check |
+| `/auth/login` | POST | Público | Login usuário |
+| `/auth/validate` | POST | Público | Validar token |
+| `/products` | GET | Público | Listar produtos |
+| `/products` | POST | Admin | Criar produto |
+| `/products/:id` | PUT | Admin | Atualizar produto |
+| `/products/:id` | DELETE | Admin | Deletar produto |
+| `/orders/cart` | GET | Customer | Ver carrinho |
+| `/orders/cart/add` | POST | Customer | Adicionar ao carrinho |
+| `/reports/sales` | GET | Admin/Viewer | Relatórios de vendas |

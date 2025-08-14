@@ -11,7 +11,7 @@
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
-            <a class="navbar-brand" href="/">
+            <a class="navbar-brand" href="/products">
                 <i class="fas fa-store me-2"></i>E-commerce Demo
             </a>
             
@@ -57,66 +57,11 @@
         </div>
     <% } %>
 
-    <!-- Hero Section -->
-    <div class="bg-light py-5">
-        <div class="container">
-            <div class="row align-items-center">
-                <div class="col-lg-6">
-                    <h1 class="display-4 fw-bold">OAuth 2.0 Microservices Demo</h1>
-                    <p class="lead">
-                        Demonstração prática de autenticação e autorização em microserviços
-                        usando OAuth 2.0, JWT tokens e controle de acesso baseado em roles.
-                    </p>
-                    <% if (!user) { %>
-                        <a href="/login" class="btn btn-primary btn-lg">
-                            <i class="fas fa-sign-in-alt me-2"></i>Login to Start
-                        </a>
-                    <% } %>
-                </div>
-                <div class="col-lg-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title">
-                                <i class="fas fa-users me-2"></i>Demo Users
-                            </h5>
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <div class="text-center p-2 border rounded">
-                                        <i class="fas fa-user-shield text-danger fa-2x mb-2"></i>
-                                        <h6>Admin</h6>
-                                        <small>admin@ecommerce.com</small><br>
-                                        <small>admin123</small>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="text-center p-2 border rounded">
-                                        <i class="fas fa-chart-bar text-warning fa-2x mb-2"></i>
-                                        <h6>Viewer</h6>
-                                        <small>viewer@ecommerce.com</small><br>
-                                        <small>viewer123</small>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="text-center p-2 border rounded">
-                                        <i class="fas fa-user text-success fa-2x mb-2"></i>
-                                        <h6>Customer</h6>
-                                        <small>customer@ecommerce.com</small><br>
-                                        <small>customer123</small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Filters -->
     <div class="container my-4">
         <div class="row">
             <div class="col-md-8">
-                <form method="GET" class="d-flex">
+                <form method="GET" action="/products" class="d-flex">
                     <input type="text" class="form-control me-2" name="search" 
                            placeholder="Search products..." value="<%= searchQuery || '' %>">
                     <button class="btn btn-outline-primary" type="submit">

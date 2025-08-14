@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/products">
+                <i class="fas fa-store me-2"></i>E-commerce Demo
+            </a>
+            
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/products">
+                    <i class="fas fa-home me-1"></i>Catálogo
+                </a>
+                <a class="nav-link" href="/dashboard">
+                    <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                </a>
+                <a class="nav-link active" href="/cart">
+                    <i class="fas fa-shopping-cart me-1"></i>Cart
+                </a>
+                <form class="d-inline" action="/logout" method="POST">
+                    <button class="btn btn-outline-light btn-sm" type="submit">
+                        <i class="fas fa-sign-out-alt me-1"></i>Logout
+                    </button>
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Alerts -->
+    <% if (typeof success !== 'undefined' && success) { %>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <%= success %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <% } %>
+    
+    <% if (typeof error !== 'undefined' && error) { %>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <%= error %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <% } %>
+
+    <div class="container my-4">
+        <h2><i class="fas fa-shopping-cart me-2"></i>Shopping Cart</h2>
+
+        <% if (cart && cart.items && cart.items.length > 0) { %>
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-body">
+                            <% cart.items.forEach(item => { %>
+                                <div class="row align-items-center border-bottom py-3">
+                                    <div class="col-md-2">
+                                        <% if (item.product.image_url) { %>
+                                            <img src="<%= item.product.image_url %>" class="img-fluid rounded" alt="<%= item.product.name %>">
+                                        <% } else { %>
+                                            <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 80px;">
+                                                <i class="fas fa-image text-muted"></i>
+                                            </div>
+                                        <% } %>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <h6><%= item.product.name %></h6>
+                                        <small class="text-muted"><%= item.product.category %></small>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="input-group input-group-sm">
+                                            <button class="btn btn-outline-secondary" onclick="updateQuantity(<%= item.id %>, <%= item.quantity - 1 %>)">-</button>
+                                            <input type="text" class="form-control text-center" value="<%= item.quantity %>" readonly>
+                                            <button class="btn btn-outline-secondary" onclick="updateQuantity(<%= item.id %>, <%= item.quantity + 1 %>)">+</button>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2 text-end">
+                                        <strong>$<%= (item.product.price * item.quantity).toFixed(2) %></strong>
+                                    </div>
+                                    <div class="col-md-2 text-end">
+                                        <button class="btn btn-sm btn-outline-danger" onclick="removeItem(<%= item.id %>)">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            <% }) %>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Order Summary</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Subtotal:</span>
+                                <span>$<%= cart.total.toFixed(2) %></span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Shipping:</span>
+                                <span>Free</span>
+                            </div>
+                            <hr>
+                            <div class="d-flex justify-content-between mb-3">
+                                <strong>Total:</strong>
+                                <strong>$<%= cart.total.toFixed(2) %></strong>
+                            </div>
+                            
+                            <form action="/checkout" method="POST">
+                                <button type="submit" class="btn btn-success w-100">
+                                    <i class="fas fa-credit-card me-2"></i>Proceed to Checkout
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <a href="/products" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-arrow-left me-2"></i>Continue Shopping
+                        </a>
+                    </div>
+                </div>
+            </div>
+        <% } else { %>
+            <div class="text-center py-5">
+                <i class="fas fa-shopping-cart fa-4x text-muted mb-4"></i>
+                <h4 class="text-muted">Your cart is empty</h4>
+                <p class="text-muted">Add some products to get started</p>
+                <a href="/products" class="btn btn-primary">
+                    <i class="fas fa-store me-2"></i>Start Shopping
+                </a>
+            </div>
+        <% } %>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        async function updateQuantity(itemId, newQuantity) {
+            if (newQuantity < 1) {
+                removeItem(itemId);
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/cart/update/${itemId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ quantity: newQuantity })
+                });
+                
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert('Failed to update quantity');
+                }
+            } catch (error) {
+                alert('Error updating quantity');
+            }
+        }
+
+        async function removeItem(itemId) {
+            if (confirm('Remove this item from cart?')) {
+                try {
+                    const response = await fetch(`/api/cart/remove/${itemId}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    if (response.ok) {
+                        location.reload();
+                    } else {
+                        alert('Failed to remove item');
+                    }
+                } catch (error) {
+                    alert('Error removing item');
+                }
+            }
+        }
+    </script>
+</body>
+</html>

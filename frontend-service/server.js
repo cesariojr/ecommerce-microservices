@@ -58,10 +58,18 @@ const requireAuth = async (req, res, next) => {
 
 // Routes
 
-// Home page - product catalog
-app.get('/', async (req, res) => {
+// Home page - redirect to login
+app.get('/', (req, res) => {
+  if (req.cookies.access_token) {
+    return res.redirect('/dashboard');
+  }
+  res.redirect('/login');
+});
+
+// Product catalog page
+app.get('/products', async (req, res) => {
   try {
-    const { category, search, page = 1 } = req.query;
+    const { category, search, page = 1, success, error } = req.query;
     
     // Get products
     const productsResponse = await axios.get(`${PRODUCT_SERVICE_URL}/products`, {
@@ -78,10 +86,12 @@ app.get('/', async (req, res) => {
       pagination: productsResponse.data.pagination,
       currentCategory: category,
       searchQuery: search,
+      success: success,
+      error: error,
       user: req.cookies.access_token ? await getUserFromToken(req.cookies.access_token) : null
     });
   } catch (error) {
-    console.error('Error loading home page:', error.message);
+    console.error('Error loading products page:', error.message);
     res.render('error', { 
       title: 'Error',
       message: 'Failed to load products',
@@ -214,9 +224,42 @@ app.get('/admin/products', requireAuth, async (req, res) => {
   }
 });
 
+// API: Add product (admin only)
+app.post('/api/admin/products', requireAuth, async (req, res) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Admin access required' });
+  }
+
+  try {
+    const response = await axios.post(`${PRODUCT_SERVICE_URL}/products`, req.body, {
+      headers: { Authorization: `Bearer ${req.cookies.access_token}` }
+    });
+    res.json(response.data);
+  } catch (error) {
+    res.status(error.response?.status || 500).json(error.response?.data || { error: 'Failed to add product' });
+  }
+});
+
+// API: Delete product (admin only)
+app.delete('/api/admin/products/:id', requireAuth, async (req, res) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Admin access required' });
+  }
+
+  try {
+    const response = await axios.delete(`${PRODUCT_SERVICE_URL}/products/${req.params.id}`, {
+      headers: { Authorization: `Bearer ${req.cookies.access_token}` }
+    });
+    res.json(response.data);
+  } catch (error) {
+    res.status(error.response?.status || 500).json(error.response?.data || { error: 'Failed to delete product' });
+  }
+});
+
 // Shopping cart
 app.get('/cart', requireAuth, async (req, res) => {
   try {
+    const { success, error } = req.query;
     const response = await axios.get(`${PRODUCT_SERVICE_URL}/orders/cart`, {
       headers: { Authorization: `Bearer ${req.cookies.access_token}` }
     });
@@ -224,6 +267,8 @@ app.get('/cart', requireAuth, async (req, res) => {
     res.render('cart', {
       title: 'Shopping Cart',
       cart: response.data,
+      success: success,
+      error: error,
       user: req.user
     });
   } catch (error) {
@@ -245,10 +290,34 @@ app.post('/cart/add/:productId', requireAuth, async (req, res) => {
       headers: { Authorization: `Bearer ${req.cookies.access_token}` }
     });
 
-    res.redirect('/?success=Item added to cart');
+    res.redirect('/products?success=Item added to cart');
   } catch (error) {
     const errorMessage = error.response?.data?.message || 'Failed to add item to cart';
-    res.redirect(`/?error=${encodeURIComponent(errorMessage)}`);
+    res.redirect(`/products?error=${encodeURIComponent(errorMessage)}`);
+  }
+});
+
+// API: Update cart item quantity
+app.put('/api/cart/update/:itemId', requireAuth, async (req, res) => {
+  try {
+    const response = await axios.put(`${PRODUCT_SERVICE_URL}/orders/cart/update/${req.params.itemId}`, req.body, {
+      headers: { Authorization: `Bearer ${req.cookies.access_token}` }
+    });
+    res.json(response.data);
+  } catch (error) {
+    res.status(error.response?.status || 500).json(error.response?.data || { error: 'Failed to update item' });
+  }
+});
+
+// API: Remove cart item
+app.delete('/api/cart/remove/:itemId', requireAuth, async (req, res) => {
+  try {
+    const response = await axios.delete(`${PRODUCT_SERVICE_URL}/orders/cart/remove/${req.params.itemId}`, {
+      headers: { Authorization: `Bearer ${req.cookies.access_token}` }
+    });
+    res.json(response.data);
+  } catch (error) {
+    res.status(error.response?.status || 500).json(error.response?.data || { error: 'Failed to remove item' });
   }
 });
 
@@ -269,7 +338,7 @@ app.post('/checkout', requireAuth, async (req, res) => {
 // Logout
 app.post('/logout', (req, res) => {
   res.clearCookie('access_token');
-  res.redirect('/');
+  res.redirect('/login');
 });
 
 // Helper function

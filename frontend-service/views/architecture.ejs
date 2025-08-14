@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Arquitetura do Sistema - E-commerce Microservices</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -277,7 +279,250 @@ GET    /reports/sales     - Relatórios (viewer/admin)
 
         <h2>🗄️ Esquemas de Banco de Dados</h2>
         
-        <h3>Auth Service Database (auth.db)</h3>
+        <div class="row mb-5">
+            <div class="col-12">
+                <h3><i class="fas fa-shield-alt text-danger me-2"></i>Auth Service Database (auth.db)</h3>
+                <p class="text-muted">Responsável pelo armazenamento de usuários e autenticação do sistema.</p>
+                
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-danger">
+                            <tr>
+                                <th colspan="4" class="text-center fs-5">
+                                    <i class="fas fa-users me-2"></i>Tabela: users
+                                </th>
+                            </tr>
+                            <tr class="table-light">
+                                <th width="20%">Campo</th>
+                                <th width="15%">Tipo</th>
+                                <th width="30%">Constraints</th>
+                                <th width="35%">Descrição</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code class="text-primary">id</code></td>
+                                <td><span class="badge bg-secondary">INTEGER</span></td>
+                                <td><span class="badge bg-warning text-dark">PRIMARY KEY AUTOINCREMENT</span></td>
+                                <td>Identificador único do usuário</td>
+                            </tr>
+                            <tr>
+                                <td><code class="text-primary">email</code></td>
+                                <td><span class="badge bg-secondary">TEXT</span></td>
+                                <td><span class="badge bg-danger">UNIQUE NOT NULL</span></td>
+                                <td>Email do usuário (usado para login)</td>
+                            </tr>
+                            <tr>
+                                <td><code class="text-primary">password</code></td>
+                                <td><span class="badge bg-secondary">TEXT</span></td>
+                                <td><span class="badge bg-danger">NOT NULL</span></td>
+                                <td>Senha criptografada com bcrypt</td>
+                            </tr>
+                            <tr>
+                                <td><code class="text-primary">role</code></td>
+                                <td><span class="badge bg-secondary">TEXT</span></td>
+                                <td><span class="badge bg-info">DEFAULT 'customer'</span></td>
+                                <td>Papel do usuário (admin, viewer, customer)</td>
+                            </tr>
+                            <tr>
+                                <td><code class="text-primary">created_at</code></td>
+                                <td><span class="badge bg-secondary">DATETIME</span></td>
+                                <td><span class="badge bg-info">DEFAULT CURRENT_TIMESTAMP</span></td>
+                                <td>Data e hora de criação do registro</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <h3><i class="fas fa-box text-success me-2"></i>Product Service Database (products.db)</h3>
+                <p class="text-muted">Gerencia produtos, pedidos e carrinho de compras do e-commerce.</p>
+                
+                <div class="row">
+                    <div class="col-lg-6 mb-4">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover">
+                                <thead class="table-success">
+                                    <tr>
+                                        <th colspan="4" class="text-center fs-6">
+                                            <i class="fas fa-box me-2"></i>Tabela: products
+                                        </th>
+                                    </tr>
+                                    <tr class="table-light">
+                                        <th>Campo</th>
+                                        <th>Tipo</th>
+                                        <th>Constraints</th>
+                                        <th>Descrição</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><code class="text-primary">id</code></td>
+                                        <td><span class="badge bg-secondary">INTEGER</span></td>
+                                        <td><span class="badge bg-warning text-dark">PRIMARY KEY</span></td>
+                                        <td>ID único</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code class="text-primary">name</code></td>
+                                        <td><span class="badge bg-secondary">TEXT</span></td>
+                                        <td><span class="badge bg-danger">NOT NULL</span></td>
+                                        <td>Nome do produto</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code class="text-primary">description</code></td>
+                                        <td><span class="badge bg-secondary">TEXT</span></td>
+                                        <td><span class="badge bg-light text-dark">NULL</span></td>
+                                        <td>Descrição detalhada</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code class="text-primary">price</code></td>
+                                        <td><span class="badge bg-secondary">DECIMAL</span></td>
+                                        <td><span class="badge bg-danger">NOT NULL</span></td>
+                                        <td>Preço do produto</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code class="text-primary">category</code></td>
+                                        <td><span class="badge bg-secondary">TEXT</span></td>
+                                        <td><span class="badge bg-danger">NOT NULL</span></td>
+                                        <td>Categoria</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code class="text-primary">stock_quantity</code></td>
+                                        <td><span class="badge bg-secondary">INTEGER</span></td>
+                                        <td><span class="badge bg-info">DEFAULT 0</span></td>
+                                        <td>Estoque disponível</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code class="text-primary">image_url</code></td>
+                                        <td><span class="badge bg-secondary">TEXT</span></td>
+                                        <td><span class="badge bg-light text-dark">NULL</span></td>
+                                        <td>URL da imagem</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code class="text-primary">created_at</code></td>
+                                        <td><span class="badge bg-secondary">DATETIME</span></td>
+                                        <td><span class="badge bg-info">DEFAULT NOW</span></td>
+                                        <td>Data de criação</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code class="text-primary">updated_at</code></td>
+                                        <td><span class="badge bg-secondary">DATETIME</span></td>
+                                        <td><span class="badge bg-info">DEFAULT NOW</span></td>
+                                        <td>Última atualização</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-6">
+                        <div class="table-responsive mb-4">
+                            <table class="table table-bordered table-hover">
+                                <thead class="table-primary">
+                                    <tr>
+                                        <th colspan="4" class="text-center fs-6">
+                                            <i class="fas fa-shopping-cart me-2"></i>Tabela: orders
+                                        </th>
+                                    </tr>
+                                    <tr class="table-light">
+                                        <th>Campo</th>
+                                        <th>Tipo</th>
+                                        <th>Constraints</th>
+                                        <th>Descrição</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><code class="text-primary">id</code></td>
+                                        <td><span class="badge bg-secondary">INTEGER</span></td>
+                                        <td><span class="badge bg-warning text-dark">PRIMARY KEY</span></td>
+                                        <td>ID único do pedido</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code class="text-primary">user_id</code></td>
+                                        <td><span class="badge bg-secondary">INTEGER</span></td>
+                                        <td><span class="badge bg-danger">NOT NULL</span></td>
+                                        <td>ID do usuário</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code class="text-primary">status</code></td>
+                                        <td><span class="badge bg-secondary">TEXT</span></td>
+                                        <td><span class="badge bg-info">DEFAULT 'cart'</span></td>
+                                        <td>Status do pedido</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code class="text-primary">total</code></td>
+                                        <td><span class="badge bg-secondary">DECIMAL</span></td>
+                                        <td><span class="badge bg-info">DEFAULT 0</span></td>
+                                        <td>Valor total</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code class="text-primary">created_at</code></td>
+                                        <td><span class="badge bg-secondary">DATETIME</span></td>
+                                        <td><span class="badge bg-info">DEFAULT NOW</span></td>
+                                        <td>Data de criação</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover">
+                                <thead class="table-warning">
+                                    <tr>
+                                        <th colspan="4" class="text-center fs-6">
+                                            <i class="fas fa-list me-2"></i>Tabela: order_items
+                                        </th>
+                                    </tr>
+                                    <tr class="table-light">
+                                        <th>Campo</th>
+                                        <th>Tipo</th>
+                                        <th>Constraints</th>
+                                        <th>Descrição</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><code class="text-primary">id</code></td>
+                                        <td><span class="badge bg-secondary">INTEGER</span></td>
+                                        <td><span class="badge bg-warning text-dark">PRIMARY KEY</span></td>
+                                        <td>ID único do item</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code class="text-primary">order_id</code></td>
+                                        <td><span class="badge bg-secondary">INTEGER</span></td>
+                                        <td><span class="badge bg-success">FOREIGN KEY</span></td>
+                                        <td>Ref. ao pedido</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code class="text-primary">product_id</code></td>
+                                        <td><span class="badge bg-secondary">INTEGER</span></td>
+                                        <td><span class="badge bg-success">FOREIGN KEY</span></td>
+                                        <td>Ref. ao produto</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code class="text-primary">quantity</code></td>
+                                        <td><span class="badge bg-secondary">INTEGER</span></td>
+                                        <td><span class="badge bg-danger">NOT NULL</span></td>
+                                        <td>Quantidade</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code class="text-primary">price</code></td>
+                                        <td><span class="badge bg-secondary">DECIMAL</span></td>
+                                        <td><span class="badge bg-danger">NOT NULL</span></td>
+                                        <td>Preço no momento</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         <div class="code-block">
 -- Tabela de usuários
 CREATE TABLE users (
@@ -394,28 +639,12 @@ Response: {
 }
         </div>
 
-        <h2>🚀 Melhorias Futuras</h2>
-        
-        <h3>Escalabilidade</h3>
-        <ul>
-            <li><strong>Service mesh</strong> implementation (Istio)</li>
-            <li><strong>Container orchestration</strong> (Kubernetes)</li>
-            <li><strong>Database sharding</strong> strategy</li>
-            <li><strong>Event-driven architecture</strong> com message queues</li>
-        </ul>
-
-        <h3>Segurança Avançada</h3>
-        <ul>
-            <li><strong>OAuth 2.1</strong> compliance</li>
-            <li><strong>PKCE</strong> para todos os flows</li>
-            <li><strong>Certificate-based</strong> client authentication</li>
-            <li><strong>Advanced threat detection</strong></li>
-        </ul>
-
         <div style="margin-top: 40px; padding: 20px; background: #ecf0f1; border-radius: 8px; text-align: center;">
             <p><strong>Desenvolvido para MBA em Engenharia de Software</strong><br>
             <em>Demonstração prática de autenticação e autorização em microserviços</em></p>
         </div>
     </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

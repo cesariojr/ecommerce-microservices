@@ -1,25 +1,24 @@
-# E-commerce Microservices - OAuth 2.0 Demo
+# E-commerce Microservices - Demonstração OAuth 2.0
 
 Demonstração prática de autenticação e autorização em microserviços usando OAuth 2.0, JWT tokens e controle de acesso baseado em roles (RBAC).
-ATENÇÃO: Essa app não possui todas as funcionalidades implementadas, é uma demonstração com foco nos elementos de autenticação e autorização em microserviços.
 
 ## 🏗️ Arquitetura
 
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
 │ Frontend Service│    │  Auth Service   │    │Product Service  │
-│   (Port 3000)   │    │   (Port 3001)   │    │   (Port 3002)   │
+│   (Porta 3000)  │    │   (Porta 3001)  │    │   (Porta 3002)  │
 │                 │    │                 │    │                 │
-│ • EJS Templates │    │ • OAuth 2.0     │    │ • Product CRUD  │
-│ • User Interface│◄──▶│ • JWT Tokens    │◄──▶│ • Order Mgmt    │
-│ • Cookie Auth   │    │ • User Mgmt     │    │ • Shopping Cart │
-│ • Role-based UI │    │ • RBAC          │    │ • Reports       │
+│ • Templates EJS │    │ • OAuth 2.0     │    │ • CRUD Produtos │
+│ • Interface Web │◄──▶│ • JWT Tokens    │◄──▶│ • Gestão Pedidos│
+│ • Auth Cookies  │    │ • Gestão Users  │    │ • Shopping Cart │
+│ • UI por Role   │    │ • RBAC          │    │ • Relatórios    │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
          │                       │                       │
          └───────────────────────┼───────────────────────┘
                                  │
                     ┌─────────────────┐
-                    │   SQLite DBs    │
+                    │   Bancos SQLite │
                     │                 │
                     │ • auth.db       │
                     │ • products.db   │
@@ -66,10 +65,10 @@ npm start
 - **Auth API**: http://localhost:3001/health
 - **Product API**: http://localhost:3002/health
 
-## 👥 Usuários Demo
+## 👥 Usuários de Demonstração
 
-| Role | Email | Password | Permissões |
-|------|-------|----------|------------|
+| Role | Email | Senha | Permissões |
+|------|-------|-------|------------|
 | **Admin** | admin@ecommerce.com | admin123 | CRUD produtos, visualizar pedidos, relatórios |
 | **Viewer** | viewer@ecommerce.com | viewer123 | Visualizar relatórios de vendas |
 | **Customer** | customer@ecommerce.com | customer123 | Navegar produtos, fazer compras |
@@ -78,21 +77,21 @@ npm start
 
 ### Autenticação OAuth 2.0
 - ✅ Login com JWT tokens
-- ✅ Token validation entre serviços
-- ✅ Refresh token rotation
-- ✅ Session management via cookies
+- ✅ Validação de tokens entre serviços
+- ✅ Renovação automática de tokens
+- ✅ Gerenciamento de sessões via cookies
 
 ### Autorização RBAC
-- ✅ Role-based access control
-- ✅ Scope-based permissions
-- ✅ Resource-level authorization
-- ✅ Service-to-service auth
+- ✅ Controle de acesso baseado em roles
+- ✅ Permissões baseadas em scopes
+- ✅ Autorização a nível de recursos
+- ✅ Autenticação service-to-service
 
 ### Microserviços
-- ✅ Service isolation
-- ✅ Independent databases
-- ✅ REST API communication
-- ✅ Distributed authentication
+- ✅ Isolamento de serviços
+- ✅ Bancos de dados independentes
+- ✅ Comunicação via REST API
+- ✅ Autenticação distribuída
 
 ## 📊 Endpoints da API
 
@@ -101,8 +100,8 @@ npm start
 POST /auth/login          - Login de usuário
 POST /auth/validate       - Validar token JWT
 GET  /auth/profile        - Perfil do usuário
-POST /oauth/token         - OAuth token endpoint
-GET  /oauth/authorize     - OAuth authorization endpoint
+POST /oauth/token         - Endpoint de token OAuth
+GET  /oauth/authorize     - Endpoint de autorização OAuth
 ```
 
 ### Product Service (3002)
@@ -111,7 +110,7 @@ GET    /products          - Listar produtos (público)
 POST   /products          - Criar produto (admin)
 PUT    /products/:id      - Atualizar produto (admin)
 DELETE /products/:id      - Deletar produto (admin)
-GET    /orders            - Listar pedidos (auth)
+GET    /orders            - Listar pedidos (autenticado)
 POST   /orders/checkout   - Finalizar compra (customer)
 GET    /orders/cart       - Ver carrinho (customer)
 POST   /orders/cart/add   - Adicionar ao carrinho (customer)
@@ -120,43 +119,42 @@ GET    /reports/sales     - Relatórios (viewer/admin)
 
 ### Frontend Service (3000)
 ```
-GET  /                    - Catálogo de produtos
+GET  /                    - Redireciona para login
+GET  /products            - Catálogo de produtos
 GET  /login               - Página de login
 POST /login               - Processar login
-GET  /dashboard           - Dashboard por role
+GET  /dashboard           - Dashboard personalizado por role
 GET  /cart                - Carrinho de compras
-POST /cart/add/:id        - Adicionar ao carrinho
+POST /cart/add/:id        - Adicionar produto ao carrinho
 POST /checkout            - Finalizar compra
 GET  /admin/products      - Gestão de produtos (admin)
+GET  /architecture        - Documentação da arquitetura
 ```
 
 ## 🛡️ Segurança Implementada
 
 ### Tokens JWT
-- **Algoritmo**: RS256 (assinatura RSA)
+- **Algoritmo**: HS256 (HMAC SHA-256)
 - **Claims**: iss, aud, exp, user_id, role, scopes
-- **Validação**: Signature + expiration + claims
+- **Validação**: Assinatura + expiração + claims
 
 ### Middleware de Autorização
-- **Token validation**: Via auth service
-- **Scope checking**: Permissões granulares
-- **Role verification**: Controle por papel
-- **Resource ownership**: Acesso a recursos próprios
+- **Validação de tokens**: Via auth service
+- **Verificação de scopes**: Permissões granulares
+- **Verificação de roles**: Controle por papel
+- **Propriedade de recursos**: Acesso a recursos próprios
 
 ### Proteções
-- **Rate limiting**: 100 req/15min por IP
+- **Rate limiting**: Proteção contra abuso de API
 - **CORS**: Configurado para origins específicos
-- **Helmet**: Headers de segurança
-- **Input validation**: Sanitização de dados
+- **Helmet**: Headers de segurança HTTP
+- **Validação de entrada**: Sanitização de dados
 
-## 🗄️ Estrutura do Banco
+## 🗄️ Estrutura dos Bancos de Dados
 
 ### Auth Service (auth.db)
 ```sql
 users              - Usuários do sistema
-oauth_clients       - Clientes OAuth registrados
-auth_codes         - Códigos de autorização temporários
-refresh_tokens     - Tokens de renovação
 ```
 
 ### Product Service (products.db)
@@ -164,7 +162,7 @@ refresh_tokens     - Tokens de renovação
 products           - Catálogo de produtos
 orders             - Pedidos dos clientes
 order_items        - Itens dos pedidos
-cart_items         - Carrinho de compras
+cart_items         - Carrinho de compras (implementado via orders)
 ```
 
 ## 🔧 Configuração
@@ -187,16 +185,16 @@ PORT=3000
 
 ## 📚 Conceitos Demonstrados
 
-### OAuth 2.0 Flows
+### Fluxos OAuth 2.0
 1. **Authorization Code**: Login web tradicional
 2. **Client Credentials**: Comunicação service-to-service
 3. **Token Refresh**: Renovação automática de tokens
 
-### JWT Structure
+### Estrutura JWT
 ```json
 {
   "header": {
-    "alg": "RS256",
+    "alg": "HS256",
     "typ": "JWT"
   },
   "payload": {
@@ -211,15 +209,15 @@ PORT=3000
 }
 ```
 
-### RBAC Matrix
-| Resource | Admin | Viewer | Customer |
-|----------|-------|--------|----------|
-| Products (Read) | ✅ | ✅ | ✅ |
-| Products (Write) | ✅ | ❌ | ❌ |
-| Orders (Own) | ✅ | ❌ | ✅ |
-| Orders (All) | ✅ | ❌ | ❌ |
-| Reports | ✅ | ✅ | ❌ |
-| Cart | ❌ | ❌ | ✅ |
+### Matriz RBAC
+| Recurso | Admin | Viewer | Customer |
+|---------|-------|--------|----------|
+| Produtos (Leitura) | ✅ | ✅ | ✅ |
+| Produtos (Escrita) | ✅ | ❌ | ❌ |
+| Pedidos (Próprios) | ✅ | ❌ | ✅ |
+| Pedidos (Todos) | ✅ | ❌ | ❌ |
+| Relatórios | ✅ | ✅ | ❌ |
+| Carrinho | ❌ | ❌ | ✅ |
 
 ## 🧪 Testando a Aplicação
 
@@ -233,7 +231,7 @@ curl -X POST http://localhost:3001/auth/login \
 # Validar token
 curl -X POST http://localhost:3001/auth/validate \
   -H "Content-Type: application/json" \
-  -d '{"token":"YOUR_JWT_TOKEN"}'
+  -d '{"token":"SEU_JWT_TOKEN"}'
 ```
 
 ### 2. Teste de Autorização
@@ -243,28 +241,34 @@ curl http://localhost:3002/products
 
 # Criar produto (requer admin)
 curl -X POST http://localhost:3002/products \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Authorization: Bearer SEU_JWT_TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"name":"Test Product","price":99.99,"category":"Test"}'
+  -d '{"name":"Produto Teste","price":99.99,"category":"Teste"}'
 
 # Ver relatórios (requer viewer/admin)
 curl http://localhost:3002/reports/sales \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+  -H "Authorization: Bearer SEU_JWT_TOKEN"
 ```
+
+### 3. Testes com Postman
+Utilize a collection disponível em `/postman/` para testes automatizados:
+- **Collection**: `E-commerce_Simple_Tests.postman_collection.json`
+- **Environment**: `E-commerce_Environment.postman_environment.json`
+- **Guia**: `QUICK_TEST_SCENARIOS.md`
 
 ## 🎯 Objetivos Didáticos
 
-Esta aplicação demonstra:
+Esta aplicação demonstra na prática:
 
-1. **OAuth 2.0 Implementation**: Fluxos completos de autorização
-2. **JWT Token Management**: Criação, validação e renovação
-3. **Microservices Security**: Autenticação distribuída
-4. **RBAC Authorization**: Controle granular de acesso
-5. **Service Communication**: Auth entre microserviços
-6. **Session Management**: Cookies e token storage
-7. **API Security**: Rate limiting, CORS, validation
+1. **Implementação OAuth 2.0**: Fluxos completos de autorização
+2. **Gerenciamento JWT**: Criação, validação e renovação de tokens
+3. **Segurança em Microserviços**: Autenticação distribuída
+4. **Autorização RBAC**: Controle granular de acesso
+5. **Comunicação entre Serviços**: Autenticação service-to-service
+6. **Gerenciamento de Sessões**: Cookies e armazenamento de tokens
+7. **Segurança de APIs**: Rate limiting, CORS, validação
 
-## 📖 Referências
+## 📖 Referências Técnicas
 
 - [RFC 6749 - OAuth 2.0 Authorization Framework](https://tools.ietf.org/html/rfc6749)
 - [RFC 7519 - JSON Web Token (JWT)](https://tools.ietf.org/html/rfc7519)

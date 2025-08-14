@@ -1,40 +1,40 @@
-# E-commerce Microservices Architecture Documentation
+# Documentação da Arquitetura - E-commerce Microservices
 
-## System Overview
+## Visão Geral do Sistema
 
-This document provides detailed architecture documentation for the OAuth 2.0 enabled e-commerce microservices system, covering security patterns, service interactions, and technical implementation details.
+Este documento fornece documentação detalhada da arquitetura do sistema de microserviços e-commerce habilitado com OAuth 2.0, cobrindo padrões de segurança, interações entre serviços e detalhes de implementação técnica.
 
-## Architecture Patterns
+## Padrões de Arquitetura
 
-### 1. Microservices Architecture
+### 1. Arquitetura de Microserviços
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                        Client Layer                             │
+│                        Camada Cliente                           │
 ├─────────────────────────────────────────────────────────────────┤
-│  Web Browser  │  Mobile App  │  External API  │  Admin Panel   │
+│  Navegador Web │  App Mobile  │  API Externa  │  Painel Admin  │
 └─────────────────────────────────────────────────────────────────┘
                                 │
 ┌─────────────────────────────────────────────────────────────────┐
-│                     API Gateway Layer                          │
+│                     Camada API Gateway                         │
 ├─────────────────────────────────────────────────────────────────┤
-│              Frontend Service (Port 3000)                      │
-│              • Route Management                                │
-│              • Session Handling                                │
-│              • UI Rendering                                    │
+│              Frontend Service (Porta 3000)                     │
+│              • Gerenciamento de Rotas                          │
+│              • Manipulação de Sessões                          │
+│              • Renderização de UI                              │
 └─────────────────────────────────────────────────────────────────┘
                                 │
 ┌─────────────────────────────────────────────────────────────────┐
-│                    Business Services Layer                     │
+│                    Camada de Serviços de Negócio               │
 ├─────────────────────────────────────────────────────────────────┤
 │  Auth Service (3001)    │    Product Service (3002)           │
-│  • OAuth 2.0 Server     │    • Product Management             │
-│  • JWT Token Mgmt       │    • Order Processing               │
-│  • User Authentication  │    • Shopping Cart                  │
-│  • RBAC Authorization   │    • Sales Reporting                │
+│  • Servidor OAuth 2.0   │    • Gestão de Produtos             │
+│  • Gestão JWT Tokens    │    • Processamento Pedidos          │
+│  • Autenticação Users   │    • Shopping Cart                  │
+│  • Autorização RBAC     │    • Relatórios de Vendas           │
 └─────────────────────────────────────────────────────────────────┘
                                 │
 ┌─────────────────────────────────────────────────────────────────┐
-│                      Data Layer                                │
+│                      Camada de Dados                           │
 ├─────────────────────────────────────────────────────────────────┤
 │     auth.db             │         products.db                 │
 │     • users             │         • products                  │
@@ -44,148 +44,280 @@ This document provides detailed architecture documentation for the OAuth 2.0 ena
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### 2. Security Architecture
+### 2. Arquitetura de Segurança
 
-#### OAuth 2.0 Authorization Server Pattern
+#### Padrão OAuth 2.0 Authorization Server
 ```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Client App    │    │ Authorization   │    │ Resource Server │
-│                 │    │    Server       │    │                 │
-│ 1. Auth Request │───▶│                 │    │                 │
-│                 │    │ 2. User Login   │    │                 │
-│                 │◄───│ 3. Auth Code    │    │                 │
-│                 │    │                 │    │                 │
-│ 4. Token Req    │───▶│                 │    │                 │
-│                 │◄───│ 5. Access Token │    │                 │
-│                 │    │                 │    │                 │
-│ 6. API Request  │─────────────────────────▶│                 │
-│                 │◄─────────────────────────│ 7. Protected    │
-│                 │                          │    Resource     │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-```
-
-#### JWT Token Flow
-```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│ Frontend Service│    │  Auth Service   │    │Product Service  │
-│                 │    │                 │    │                 │
-│ 1. Login        │───▶│                 │    │                 │
-│                 │◄───│ 2. JWT Token    │    │                 │
-│                 │    │                 │    │                 │
-│ 3. API Call     │─────────────────────────▶│                 │
-│    + JWT        │    │                 │    │ 4. Validate     │
-│                 │    │                 │◄───│    Token        │
-│                 │    │ 5. User Info    │───▶│                 │
-│                 │◄─────────────────────────│ 6. Response     │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
+┌─────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Cliente   │    │ Authorization   │    │  Resource       │
+│ (Frontend)  │    │ Server          │    │  Server         │
+│             │    │ (Auth Service)  │    │ (Product Serv.) │
+└─────────────┘    └─────────────────┘    └─────────────────┘
+       │                     │                     │
+       │ 1. Authorization    │                     │
+       │    Request          │                     │
+       │────────────────────▶│                     │
+       │                     │                     │
+       │ 2. Authorization    │                     │
+       │    Grant            │                     │
+       │◄────────────────────│                     │
+       │                     │                     │
+       │ 3. Access Token     │                     │
+       │    Request          │                     │
+       │────────────────────▶│                     │
+       │                     │                     │
+       │ 4. Access Token     │                     │
+       │◄────────────────────│                     │
+       │                                           │
+       │ 5. Protected Resource Request             │
+       │──────────────────────────────────────────▶│
+       │                                           │
+       │ 6. Protected Resource                     │
+       │◄──────────────────────────────────────────│
 ```
 
-## Service Specifications
-
-### Auth Service (Port 3001)
-
-#### Core Responsibilities
-- OAuth 2.0 Authorization Server
-- JWT Token Management (Issue, Validate, Refresh)
-- User Authentication & Session Management
-- RBAC Policy Enforcement
-
-#### API Endpoints
+#### Fluxo de Autenticação JWT
 ```
-Authentication Endpoints:
-POST   /auth/login           - User authentication
-POST   /auth/validate        - JWT token validation
-GET    /auth/profile         - User profile retrieval
-POST   /auth/logout          - Session termination
-
-OAuth 2.0 Endpoints:
-GET    /oauth/authorize      - Authorization endpoint
-POST   /oauth/token          - Token endpoint
-POST   /oauth/revoke         - Token revocation
-
-Administrative Endpoints:
-GET    /admin/users          - User management (admin only)
-POST   /admin/users          - Create user (admin only)
+┌─────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│  Frontend   │    │  Auth Service   │    │ Product Service │
+│  Service    │    │                 │    │                 │
+└─────────────┘    └─────────────────┘    └─────────────────┘
+       │                     │                     │
+       │ 1. Login Request    │                     │
+       │────────────────────▶│                     │
+       │                     │                     │
+       │ 2. JWT Token        │                     │
+       │◄────────────────────│                     │
+       │                     │                     │
+       │ 3. API Request      │                     │
+       │    + JWT Token      │                     │
+       │──────────────────────────────────────────▶│
+       │                     │                     │
+       │                     │ 4. Token Validation │
+       │                     │◄────────────────────│
+       │                     │                     │
+       │                     │ 5. User Info        │
+       │                     │────────────────────▶│
+       │                     │                     │
+       │ 6. API Response     │                     │
+       │◄──────────────────────────────────────────│
 ```
 
-#### Database Schema (auth.db)
+## 🔐 Implementação de Segurança
+
+### 1. Autenticação Multi-Camadas
+
+#### Camada 1: Frontend Authentication
+- **Session Cookies**: Armazenamento seguro de tokens
+- **CSRF Protection**: Proteção contra ataques cross-site
+- **Secure Headers**: Helmet.js para headers de segurança
+
+#### Camada 2: Service Authentication
+- **JWT Tokens**: Tokens assinados para comunicação
+- **Token Validation**: Verificação de assinatura e expiração
+- **Service-to-Service**: Autenticação entre microserviços
+
+#### Camada 3: Database Security
+- **Prepared Statements**: Proteção contra SQL injection
+- **Password Hashing**: bcrypt para senhas
+- **Connection Pooling**: Gestão segura de conexões
+
+### 2. Autorização RBAC
+
+#### Definição de Roles
+```javascript
+const ROLES = {
+  ADMIN: {
+    name: 'admin',
+    scopes: ['read', 'write', 'admin', 'reports'],
+    permissions: [
+      'products:create',
+      'products:read', 
+      'products:update',
+      'products:delete',
+      'orders:read_all',
+      'reports:read'
+    ]
+  },
+  VIEWER: {
+    name: 'viewer',
+    scopes: ['read', 'reports'],
+    permissions: [
+      'products:read',
+      'reports:read'
+    ]
+  },
+  CUSTOMER: {
+    name: 'customer', 
+    scopes: ['read', 'purchase'],
+    permissions: [
+      'products:read',
+      'orders:read_own',
+      'cart:manage'
+    ]
+  }
+};
+```
+
+#### Middleware de Autorização
+```javascript
+// Verificação de Token
+const authenticateToken = (req, res, next) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  
+  if (!token) {
+    return res.status(401).json({ error: 'Token requerido' });
+  }
+  
+  // Validar token via Auth Service
+  validateTokenWithAuthService(token)
+    .then(user => {
+      req.user = user;
+      next();
+    })
+    .catch(() => {
+      res.status(401).json({ error: 'Token inválido' });
+    });
+};
+
+// Verificação de Role
+const authorizeRole = (requiredRole) => {
+  return (req, res, next) => {
+    if (req.user.role !== requiredRole) {
+      return res.status(403).json({ error: 'Permissão insuficiente' });
+    }
+    next();
+  };
+};
+
+// Verificação de Scopes
+const authorizeScopes = (requiredScopes) => {
+  return (req, res, next) => {
+    const hasScope = requiredScopes.some(scope => 
+      req.user.scopes.includes(scope)
+    );
+    
+    if (!hasScope) {
+      return res.status(403).json({ error: 'Scope insuficiente' });
+    }
+    next();
+  };
+};
+```
+
+## 🏗️ Detalhes dos Serviços
+
+### Auth Service (Porta 3001)
+
+#### Responsabilidades
+- **Autenticação de usuários**: Login/logout
+- **Geração de tokens JWT**: Access e refresh tokens
+- **Validação de tokens**: Para outros serviços
+- **Gerenciamento de usuários**: CRUD de usuários
+- **Autorização OAuth 2.0**: Fluxos completos
+
+#### Tecnologias
+- **Express.js**: Framework web
+- **bcrypt**: Hash de senhas
+- **jsonwebtoken**: Geração/validação JWT
+- **SQLite**: Banco de dados
+- **helmet**: Segurança HTTP
+
+#### Endpoints Principais
+```
+POST /auth/login          - Autenticar usuário
+POST /auth/validate       - Validar token JWT
+GET  /auth/profile        - Perfil do usuário
+POST /oauth/token         - Token OAuth endpoint
+GET  /oauth/authorize     - Authorization endpoint
+GET  /health              - Health check
+```
+
+### Product Service (Porta 3002)
+
+#### Responsabilidades
+- **Gestão de produtos**: CRUD completo
+- **Processamento de pedidos**: Carrinho e checkout
+- **Relatórios de vendas**: Analytics básicos
+- **Controle de estoque**: Gestão de inventário
+
+#### Tecnologias
+- **Express.js**: Framework web
+- **SQLite**: Banco de dados
+- **axios**: Cliente HTTP para auth service
+- **express-rate-limit**: Rate limiting
+- **cors**: Cross-origin requests
+
+#### Endpoints Principais
+```
+GET    /products          - Listar produtos (público)
+POST   /products          - Criar produto (admin)
+PUT    /products/:id      - Atualizar produto (admin)
+DELETE /products/:id      - Deletar produto (admin)
+GET    /orders            - Listar pedidos (auth)
+POST   /orders/checkout   - Finalizar compra (customer)
+GET    /orders/cart       - Ver carrinho (customer)
+POST   /orders/cart/add   - Adicionar ao carrinho (customer)
+GET    /reports/sales     - Relatórios (viewer/admin)
+GET    /health            - Health check
+```
+
+### Frontend Service (Porta 3000)
+
+#### Responsabilidades
+- **Interface do usuário**: Templates EJS
+- **Gerenciamento de sessões**: Cookies HTTP
+- **Proxy de APIs**: Comunicação com backend
+- **Controle de acesso UI**: Baseado em roles
+
+#### Tecnologias
+- **Express.js**: Framework web
+- **EJS**: Template engine
+- **axios**: Cliente HTTP
+- **cookie-parser**: Manipulação de cookies
+- **Bootstrap 5**: Framework CSS
+
+#### Rotas Principais
+```
+GET  /                    - Redireciona para login
+GET  /products            - Catálogo de produtos
+GET  /login               - Página de login
+POST /login               - Processar login
+GET  /dashboard           - Dashboard por role
+GET  /cart                - Carrinho de compras
+GET  /admin/products      - Gestão produtos (admin)
+GET  /architecture        - Esta documentação
+```
+
+## 🗄️ Modelo de Dados
+
+### Auth Service Database (auth.db)
+
+#### Tabela: users
 ```sql
--- Users table
 CREATE TABLE users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     email TEXT UNIQUE NOT NULL,
-    password_hash TEXT NOT NULL,
+    password TEXT NOT NULL,           -- bcrypt hash
     role TEXT NOT NULL DEFAULT 'customer',
+    scopes TEXT DEFAULT 'read',       -- JSON array como string
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
-
--- OAuth clients
-CREATE TABLE oauth_clients (
-    client_id TEXT PRIMARY KEY,
-    client_secret TEXT NOT NULL,
-    redirect_uris TEXT NOT NULL,
-    grant_types TEXT NOT NULL,
-    scope TEXT NOT NULL
-);
-
--- Authorization codes (temporary)
-CREATE TABLE auth_codes (
-    code TEXT PRIMARY KEY,
-    client_id TEXT NOT NULL,
-    user_id INTEGER NOT NULL,
-    expires_at DATETIME NOT NULL,
-    scope TEXT,
-    FOREIGN KEY (user_id) REFERENCES users(id)
-);
-
--- Refresh tokens
-CREATE TABLE refresh_tokens (
-    token TEXT PRIMARY KEY,
-    user_id INTEGER NOT NULL,
-    client_id TEXT NOT NULL,
-    expires_at DATETIME NOT NULL,
-    scope TEXT,
-    FOREIGN KEY (user_id) REFERENCES users(id)
-);
 ```
 
-### Product Service (Port 3002)
-
-#### Core Responsibilities
-- Product Catalog Management
-- Order Processing & Management
-- Shopping Cart Operations
-- Sales Reporting & Analytics
-
-#### API Endpoints
-```
-Product Management:
-GET    /products             - List products (public)
-POST   /products             - Create product (admin)
-PUT    /products/:id         - Update product (admin)
-DELETE /products/:id         - Delete product (admin)
-GET    /products/:id         - Get product details (public)
-
-Order Management:
-GET    /orders               - List user orders (authenticated)
-POST   /orders/checkout      - Process checkout (customer)
-GET    /orders/:id           - Get order details (owner/admin)
-
-Shopping Cart:
-GET    /orders/cart          - Get cart contents (customer)
-POST   /orders/cart/add      - Add item to cart (customer)
-PUT    /orders/cart/:id      - Update cart item (customer)
-DELETE /orders/cart/:id      - Remove cart item (customer)
-
-Reporting:
-GET    /reports/sales        - Sales reports (viewer/admin)
-GET    /reports/inventory    - Inventory reports (admin)
-```
-
-#### Database Schema (products.db)
+#### Dados Iniciais
 ```sql
--- Products table
+INSERT INTO users (email, password, role, scopes) VALUES 
+('admin@ecommerce.com', '$2b$10$...', 'admin', '["read","write","admin","reports"]'),
+('viewer@ecommerce.com', '$2b$10$...', 'viewer', '["read","reports"]'),
+('customer@ecommerce.com', '$2b$10$...', 'customer', '["read","purchase"]');
+```
+
+### Product Service Database (products.db)
+
+#### Tabela: products
+```sql
 CREATE TABLE products (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
@@ -193,347 +325,304 @@ CREATE TABLE products (
     price DECIMAL(10,2) NOT NULL,
     category TEXT NOT NULL,
     stock_quantity INTEGER DEFAULT 0,
+    image_url TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+```
 
--- Orders table
+#### Tabela: orders
+```sql
 CREATE TABLE orders (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
-    status TEXT DEFAULT 'pending',
-    total_amount DECIMAL(10,2) NOT NULL,
+    user_email TEXT NOT NULL,
+    total_amount DECIMAL(10,2) DEFAULT 0,
+    status TEXT DEFAULT 'cart',       -- cart, pending, completed, cancelled
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+```
 
--- Order items
+#### Tabela: order_items
+```sql
 CREATE TABLE order_items (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     order_id INTEGER NOT NULL,
     product_id INTEGER NOT NULL,
     quantity INTEGER NOT NULL,
     unit_price DECIMAL(10,2) NOT NULL,
+    total_price DECIMAL(10,2) NOT NULL,
     FOREIGN KEY (order_id) REFERENCES orders(id),
     FOREIGN KEY (product_id) REFERENCES products(id)
 );
+```
 
--- Shopping cart
+#### Tabela: cart_items (implementada via orders com status='cart')
+```sql
 CREATE TABLE cart_items (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
     product_id INTEGER NOT NULL,
-    quantity INTEGER NOT NULL,
+    quantity INTEGER NOT NULL DEFAULT 1,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (product_id) REFERENCES products(id)
 );
 ```
 
-### Frontend Service (Port 3000)
+## 🔒 Fluxos de Segurança
 
-#### Core Responsibilities
-- User Interface Rendering (EJS Templates)
-- Session Management via Cookies
-- API Gateway for Client Requests
-- Role-based UI Components
-
-#### Route Structure
+### 1. Fluxo de Login (JWT)
 ```
-Public Routes:
-GET    /                     - Product catalog
-GET    /login                - Login page
-POST   /login                - Process login
-GET    /logout               - Logout
-
-Authenticated Routes:
-GET    /dashboard            - Role-based dashboard
-GET    /profile              - User profile
-GET    /cart                 - Shopping cart
-POST   /cart/add/:id         - Add to cart
-POST   /checkout             - Process checkout
-
-Admin Routes:
-GET    /admin/products       - Product management
-POST   /admin/products       - Create product
-PUT    /admin/products/:id   - Update product
-DELETE /admin/products/:id   - Delete product
-
-Viewer Routes:
-GET    /reports              - Sales reports
+1. Usuário → Frontend: Credenciais (email/password)
+2. Frontend → Auth Service: POST /auth/login
+3. Auth Service → Database: Verificar credenciais
+4. Auth Service → Auth Service: Gerar JWT token
+5. Auth Service → Frontend: JWT token
+6. Frontend → Usuário: Set cookie + redirect
 ```
 
-## Security Implementation
+### 2. Fluxo de Autorização (RBAC)
+```
+1. Frontend → Product Service: API request + JWT
+2. Product Service → Auth Service: Validar token
+3. Auth Service → Product Service: User info + roles
+4. Product Service → Product Service: Verificar permissões
+5. Product Service → Database: Executar operação (se autorizado)
+6. Product Service → Frontend: Resposta da API
+```
 
-### JWT Token Structure
+### 3. Fluxo OAuth 2.0 Authorization Code
+```
+1. Cliente → Auth Service: GET /oauth/authorize
+2. Auth Service → Cliente: Redirect para login
+3. Cliente → Auth Service: Credenciais
+4. Auth Service → Cliente: Authorization code
+5. Cliente → Auth Service: POST /oauth/token + code
+6. Auth Service → Cliente: Access token + refresh token
+```
+
+## 🛡️ Implementação de Segurança
+
+### 1. Validação de Tokens JWT
+
+#### Estrutura do Token
 ```json
 {
   "header": {
-    "alg": "RS256",
-    "typ": "JWT",
-    "kid": "auth-service-key-1"
+    "alg": "HS256",
+    "typ": "JWT"
   },
   "payload": {
-    "iss": "ecommerce-auth-service",
-    "aud": "ecommerce-api",
-    "sub": "user-123",
     "user_id": 1,
     "email": "admin@ecommerce.com",
     "role": "admin",
-    "scopes": ["read", "write", "admin"],
+    "scopes": ["read", "write", "admin", "reports"],
+    "iss": "ecommerce-auth-service",
+    "aud": "ecommerce-api",
     "iat": 1640995200,
-    "exp": 1640996100,
-    "jti": "token-unique-id"
-  }
+    "exp": 1640999200
+  },
+  "signature": "HMACSHA256(...)"
 }
 ```
 
-### RBAC Permission Matrix
-```
-┌─────────────────┬───────┬────────┬──────────┐
-│ Resource/Action │ Admin │ Viewer │ Customer │
-├─────────────────┼───────┼────────┼──────────┤
-│ Products Read   │   ✅   │   ✅    │    ✅     │
-│ Products Write  │   ✅   │   ❌    │    ❌     │
-│ Products Delete │   ✅   │   ❌    │    ❌     │
-│ Orders Read Own │   ✅   │   ❌    │    ✅     │
-│ Orders Read All │   ✅   │   ❌    │    ❌     │
-│ Orders Create   │   ✅   │   ❌    │    ✅     │
-│ Cart Management │   ❌   │   ❌    │    ✅     │
-│ Sales Reports   │   ✅   │   ✅    │    ❌     │
-│ User Management │   ✅   │   ❌    │    ❌     │
-└─────────────────┴───────┴────────┴──────────┘
-```
+#### Processo de Validação
+1. **Verificar assinatura**: HMAC SHA-256
+2. **Verificar expiração**: Campo `exp`
+3. **Verificar issuer**: Campo `iss`
+4. **Verificar audience**: Campo `aud`
+5. **Extrair claims**: user_id, role, scopes
 
-### Security Middleware Stack
+### 2. Controle de Acesso RBAC
+
+#### Matriz de Permissões
+| Recurso | Operação | Admin | Viewer | Customer |
+|---------|----------|-------|--------|----------|
+| Products | GET | ✅ | ✅ | ✅ |
+| Products | POST | ✅ | ❌ | ❌ |
+| Products | PUT | ✅ | ❌ | ❌ |
+| Products | DELETE | ✅ | ❌ | ❌ |
+| Orders | GET (own) | ✅ | ❌ | ✅ |
+| Orders | GET (all) | ✅ | ❌ | ❌ |
+| Cart | GET/POST | ❌ | ❌ | ✅ |
+| Reports | GET | ✅ | ✅ | ❌ |
+
+#### Implementação de Middleware
 ```javascript
-// Auth Service Security Stack
-app.use(helmet());                    // Security headers
-app.use(cors(corsOptions));          // CORS policy
-app.use(rateLimit(rateLimitConfig)); // Rate limiting
-app.use(express.json({ limit: '1mb' })); // Body parsing
-app.use(validateInput);              // Input validation
-app.use(authenticateToken);          // JWT validation
-app.use(authorizeRole);              // RBAC enforcement
-```
-
-## Inter-Service Communication
-
-### Service Discovery
-```javascript
-// Static service registry (development)
-const services = {
-  auth: 'http://localhost:3001',
-  product: 'http://localhost:3002',
-  frontend: 'http://localhost:3000'
-};
-
-// Health check endpoints
-GET /health - Service health status
-GET /metrics - Service metrics (Prometheus format)
-```
-
-### Authentication Flow Between Services
-```
-1. Frontend receives user request
-2. Frontend checks session cookie
-3. If no session, redirect to /login
-4. User authenticates with Auth Service
-5. Auth Service issues JWT token
-6. Frontend stores token in secure cookie
-7. Frontend makes API call to Product Service with JWT
-8. Product Service validates JWT with Auth Service
-9. Auth Service returns user info and permissions
-10. Product Service processes request based on permissions
-11. Response returned to Frontend
-12. Frontend renders appropriate UI based on user role
-```
-
-## Data Flow Diagrams
-
-### User Authentication Flow
-```
-User ──┐
-       │ 1. Login Request
-       ▼
-Frontend Service ──┐
-                   │ 2. Validate Credentials
-                   ▼
-              Auth Service ──┐
-                             │ 3. Check Database
-                             ▼
-                        SQLite (auth.db)
-                             │
-                             │ 4. User Found
-                             ▼
-              Auth Service ──┐
-                             │ 5. Generate JWT
-                             ▼
-Frontend Service ──┐
-                   │ 6. Set Cookie
-                   ▼
-                 User
-```
-
-### Product Purchase Flow
-```
-User ──┐
-       │ 1. Add to Cart
-       ▼
-Frontend Service ──┐
-                   │ 2. API Call + JWT
-                   ▼
-Product Service ──┐
-                  │ 3. Validate Token
-                  ▼
-             Auth Service
-                  │
-                  │ 4. User Info
-                  ▼
-Product Service ──┐
-                  │ 5. Update Cart
-                  ▼
-            SQLite (products.db)
-                  │
-                  │ 6. Success
-                  ▼
-Frontend Service ──┐
-                   │ 7. Update UI
-                   ▼
-                 User
-```
-
-## Deployment Architecture
-
-### Development Environment
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    Local Development                            │
-├─────────────────────────────────────────────────────────────────┤
-│  Process 1: Auth Service (3001)                                │
-│  Process 2: Product Service (3002)                             │
-│  Process 3: Frontend Service (3000)                            │
-│  Database: SQLite files (auth.db, products.db)                 │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-### Production Architecture (Recommended)
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                      Load Balancer                             │
-├─────────────────────────────────────────────────────────────────┤
-│  Frontend Service (Multiple Instances)                         │
-├─────────────────────────────────────────────────────────────────┤
-│  Auth Service (Multiple Instances)                             │
-│  Product Service (Multiple Instances)                          │
-├─────────────────────────────────────────────────────────────────┤
-│  Database Cluster (PostgreSQL/MySQL)                           │
-│  Redis Cache (Session Storage)                                 │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-## Performance Considerations
-
-### Caching Strategy
-```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│ Application     │    │ Redis Cache     │    │ Database        │
-│                 │    │                 │    │                 │
-│ 1. Check Cache  │───▶│ 2. Cache Hit?   │    │                 │
-│                 │◄───│                 │    │                 │
-│                 │    │                 │    │                 │
-│ 3. Query DB     │─────────────────────────▶│ 4. Data         │
-│                 │◄─────────────────────────│                 │
-│                 │    │                 │    │                 │
-│ 5. Store Cache  │───▶│ 6. Cache Set    │    │                 │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-
-Cache Keys:
-- user:profile:{user_id}
-- products:list:{category}
-- orders:user:{user_id}
-- reports:sales:{date_range}
-```
-
-### Rate Limiting Configuration
-```javascript
-const rateLimitConfig = {
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP',
-  standardHeaders: true,
-  legacyHeaders: false,
-};
-```
-
-## Monitoring and Observability
-
-### Health Check Endpoints
-```
-GET /health
-Response: {
-  "status": "healthy",
-  "timestamp": "2024-08-11T00:00:00Z",
-  "version": "1.0.0",
-  "dependencies": {
-    "database": "healthy",
-    "auth_service": "healthy"
+// Middleware de autenticação
+const authenticateToken = async (req, res, next) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  
+  if (!token) {
+    return res.status(401).json({ error: 'Token requerido' });
   }
-}
+
+  try {
+    // Validar token com Auth Service
+    const response = await axios.post(`${AUTH_SERVICE_URL}/auth/validate`, {
+      token: token
+    });
+
+    if (response.data.valid) {
+      req.user = response.data.user;
+      next();
+    } else {
+      res.status(401).json({ error: 'Token inválido' });
+    }
+  } catch (error) {
+    res.status(401).json({ error: 'Falha na validação do token' });
+  }
+};
+
+// Middleware de autorização por role
+const authorizeRole = (requiredRole) => {
+  return (req, res, next) => {
+    if (req.user.role !== requiredRole) {
+      return res.status(403).json({ 
+        error: 'Acesso negado',
+        required_role: requiredRole,
+        user_role: req.user.role
+      });
+    }
+    next();
+  };
+};
+
+// Middleware de autorização por scopes
+const authorizeScopes = (requiredScopes) => {
+  return (req, res, next) => {
+    const userScopes = req.user.scopes || [];
+    const hasRequiredScope = requiredScopes.some(scope => 
+      userScopes.includes(scope)
+    );
+
+    if (!hasRequiredScope) {
+      return res.status(403).json({ 
+        error: 'Scope insuficiente',
+        required_scopes: requiredScopes,
+        user_scopes: userScopes
+      });
+    }
+    next();
+  };
+};
 ```
 
-### Logging Strategy
+## 🔄 Comunicação entre Serviços
+
+### 1. Service Discovery
+- **Configuração estática**: URLs via environment variables
+- **Health checks**: Endpoints `/health` em todos os serviços
+- **Retry logic**: Tentativas automáticas em caso de falha
+
+### 2. Autenticação Service-to-Service
 ```javascript
-// Structured logging format
+// Product Service validando token com Auth Service
+const validateToken = async (token) => {
+  try {
+    const response = await axios.post(`${AUTH_SERVICE_URL}/auth/validate`, {
+      token: token
+    }, {
+      timeout: 5000,
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+
+    return response.data;
+  } catch (error) {
+    throw new Error('Token validation failed');
+  }
+};
+```
+
+### 3. Error Handling
+```javascript
+// Padronização de respostas de erro
+const errorResponse = (res, status, error, message) => {
+  res.status(status).json({
+    error: error,
+    message: message,
+    timestamp: new Date().toISOString(),
+    service: 'product-service'
+  });
+};
+```
+
+## 📊 Monitoramento e Observabilidade
+
+### 1. Health Checks
+Cada serviço implementa endpoint `/health`:
+```json
 {
-  "timestamp": "2024-08-11T00:00:00Z",
-  "level": "INFO",
+  "status": "healthy",
   "service": "auth-service",
-  "trace_id": "abc123",
-  "user_id": "user-123",
-  "action": "login_attempt",
-  "result": "success",
-  "duration_ms": 150
+  "version": "1.0.0",
+  "timestamp": "2024-01-01T12:00:00Z",
+  "dependencies": {
+    "database": "healthy"
+  }
 }
 ```
 
-## Security Best Practices Implemented
+### 2. Logging
+- **Structured logging**: JSON format
+- **Request tracking**: Correlation IDs
+- **Error logging**: Stack traces em desenvolvimento
+- **Security events**: Login attempts, token validation
 
-### Token Security
-- RS256 algorithm for JWT signing
-- Short-lived access tokens (15 minutes)
-- Refresh token rotation
-- Secure cookie storage with HttpOnly flag
+### 3. Métricas
+- **Response times**: Latência de APIs
+- **Error rates**: Taxa de erros por endpoint
+- **Authentication events**: Logins, token validation
+- **Authorization failures**: Tentativas de acesso negado
 
-### API Security
-- Input validation and sanitization
-- Rate limiting per IP address
-- CORS policy enforcement
-- Security headers via Helmet.js
+## 🧪 Estratégia de Testes
 
-### Database Security
-- Parameterized queries (SQL injection prevention)
-- Password hashing with bcrypt
-- Database connection encryption
-- Principle of least privilege
+### 1. Testes Unitários
+- **Auth middleware**: Validação de tokens
+- **RBAC logic**: Verificação de permissões
+- **Database operations**: CRUD operations
+- **JWT utilities**: Token generation/validation
 
-## Future Enhancements
+### 2. Testes de Integração
+- **Service communication**: Auth ↔ Product
+- **Database integration**: SQLite operations
+- **API endpoints**: Request/response validation
+- **Error scenarios**: Failure handling
 
-### Scalability Improvements
-- Service mesh implementation (Istio)
-- Container orchestration (Kubernetes)
-- Database sharding strategy
-- Event-driven architecture with message queues
+### 3. Testes de Segurança
+- **Token validation**: Invalid/expired tokens
+- **Role enforcement**: Unauthorized access attempts
+- **Input validation**: SQL injection, XSS
+- **Rate limiting**: Abuse prevention
 
-### Security Enhancements
-- OAuth 2.1 compliance
-- PKCE for all flows
-- Certificate-based client authentication
-- Advanced threat detection
+## 📚 Padrões Implementados
 
-### Monitoring Enhancements
-- Distributed tracing (Jaeger)
-- Metrics collection (Prometheus)
-- Log aggregation (ELK Stack)
-- Real-time alerting
+### 1. Security Patterns
+- **Token-based authentication**: JWT tokens
+- **Role-based authorization**: RBAC
+- **Secure communication**: HTTPS em produção
+- **Input validation**: Sanitização de dados
+- **Error handling**: Respostas padronizadas
+
+### 2. Microservices Patterns
+- **Service isolation**: Bancos independentes
+- **API Gateway**: Frontend como proxy
+- **Circuit breaker**: Fallback em falhas
+- **Health checks**: Monitoramento de serviços
+- **Configuration management**: Environment variables
+
+### 3. Data Patterns
+- **Database per service**: Isolamento de dados
 
 ---
+
+## 📖 Referências Técnicas
+
+- [OAuth 2.0 RFC 6749](https://tools.ietf.org/html/rfc6749)
+- [JWT RFC 7519](https://tools.ietf.org/html/rfc7519)
+- [OWASP API Security](https://owasp.org/www-project-api-security/)
+- [Microservices Patterns](https://microservices.io/patterns/)
+- [Node.js Security Best Practices](https://nodejs.org/en/docs/guides/security/)

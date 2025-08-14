@@ -73,6 +73,26 @@ router.get('/', (req, res) => {
   });
 });
 
+// Get product categories (public endpoint)
+router.get('/meta/categories', (req, res) => {
+  const db = getDatabase();
+  
+  db.all('SELECT DISTINCT category FROM products ORDER BY category', (err, categories) => {
+    db.close();
+    
+    if (err) {
+      return res.status(500).json({
+        error: 'database_error',
+        message: 'Failed to fetch categories'
+      });
+    }
+
+    res.json({
+      categories: categories.map(row => row.category)
+    });
+  });
+});
+
 // Get product by ID (public endpoint)
 router.get('/:id', (req, res) => {
   const { id } = req.params;
@@ -197,26 +217,6 @@ router.delete('/:id', authenticateToken, authorizeRole('admin'), (req, res) => {
 
     res.json({
       message: 'Product deleted successfully'
-    });
-  });
-});
-
-// Get product categories (public endpoint)
-router.get('/meta/categories', (req, res) => {
-  const db = getDatabase();
-  
-  db.all('SELECT DISTINCT category FROM products ORDER BY category', (err, categories) => {
-    db.close();
-    
-    if (err) {
-      return res.status(500).json({
-        error: 'database_error',
-        message: 'Failed to fetch categories'
-      });
-    }
-
-    res.json({
-      categories: categories.map(row => row.category)
     });
   });
 });
